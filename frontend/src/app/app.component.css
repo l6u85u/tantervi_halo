@@ -1,0 +1,60 @@
+header>div{
+    width: 100%;
+    height: 50px;
+    background-color: grey;
+}
+
+main{
+    width: 50%;
+    margin-left: 25%;
+    height:1200px;
+}
+
+footer>div{
+    width: 100%;
+    height: 75px;
+    background-color: grey;
+}
+
+h1{
+    padding-top: 40px;
+    text-align: center;
+}
+
+h2{
+    padding-top: 100px;
+}
+
+.subject_header{
+    margin-top: 80px;
+    border-style: solid;
+    height: 50px;
+}
+
+.subject_main{
+    border-style: solid;
+    border-top: 0cm;
+    height: 500px;
+}
+
+.subject_main>div{
+    height: 100%;
+}
+
+.subject_main>div>div{
+    border-style: solid;
+    height: 100%;
+}
+
+.semester {
+    height: 10%;
+    text-align: center;
+}
+
+.semester>p{
+    padding-top: 10px;
+}
+
+.subjects{
+    height: 90%;
+}
