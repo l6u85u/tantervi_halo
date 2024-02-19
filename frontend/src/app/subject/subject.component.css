@@ -1,0 +1,40 @@
+.subject_box {
+    height : 40px;
+    width : 90%;
+    margin-left: 5%;
+    margin-bottom: 10px;
+    border-style: solid;
+}
+
+.subject_name{
+    margin-bottom: 0;
+    font-weight: bold;
+    word-wrap: break-word;
+    font-size: 0.42em;
+    text-align: center;
+}
+
+.subject_credit{
+    font-size: 0.42em;
+    text-align: center;
+}
+
+.div_name{
+    height: 25px;
+}
+
+.div_credit{
+    height: 5px;
+}
+
+.status0{
+    background-color: #a19f9f;
+}
+
+.status1{
+    background-color: #667de3;
+}
+
+.status2{
+    background-color: #75b86a;
+}

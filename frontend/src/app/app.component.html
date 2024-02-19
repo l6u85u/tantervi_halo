@@ -26,29 +26,19 @@
       <div class="subject_main container">
         <div class="row">
 
-          <div class="col">
+          <div class="col"  *ngFor="let c of subjects[0]; let i = index" >
             <div class="semester">
-              <p>1. félév</p>
+              <p>{{i+1}}. félév</p>
             </div>
             <div class="subjects">
-
+              <app-subject *ngFor="let s of subjects[0][i]; let j = index" [parentData]="s" (notify)="getSubjectCredit($event,i)">
+              </app-subject>
+            </div>
+            <div class="credits">
+              <p>Felvett: {{creditSemester[i]}}</p>
+              <p>Teljesített: {{completedCreditSemester[i]}}</p>
             </div>
 
-          </div>
-          <div class="col">
-            <p class="semester">2. félév</p>
-          </div>
-          <div class="col">
-            <p class="semester">3. félév</p>
-          </div>
-          <div class="col">
-            <p class="semester">4. félév</p>
-          </div>
-          <div class="col">
-            <p class="semester">5. félév</p>
-          </div>
-          <div class="col">
-            <p class="semester">6. félév</p>
           </div>
 
 

@@ -13,39 +13,88 @@ var backendPort : string = "8000";
 export class AppComponent {
   title = 'frontend';
 
-  public subjects: Array<SubjectComponent> = []
+  public completedCreditSemester: Array<number> = [];
+  public creditSemester: Array<number> = [];
+
+  public numberOfColumns: number = 6;
+
+  public subjects: Array<Array<Array<Subject>>> = [];
 
   public xhttpSpecA: XMLHttpRequest;
 
-  public specABox: SubjectBox = {color:"grey", name:""}
+  //public specABox: SubjectBox = {color:"grey", name:""}
 
-  getDataFromSpecA(xhttp: XMLHttpRequest, box: SubjectBox){
+  private getDataFromSpec(xhttp: XMLHttpRequest, boxes: Array<Array<Subject>>){
+  
     if (xhttp.readyState == 4 && xhttp.status == 200){
-      //console.log(xhttp.responseText);
-      var resp = JSON.parse(xhttp.responseText);
-      console.log(resp);
+      var resp = JSON.parse(JSON.parse(xhttp.responseText));
+
+      for (let i=0;i<this.numberOfColumns;i++){
+        //console.log(boxes)
+        boxes.push([])
+      }
+      
+      for (var i = 0; i < resp.length; i++){
+        console.log(resp[i]["Kód"]);
+        var felev = resp[i]["Ajánlott félév"]
+
+        if (typeof felev === 'string'){
+          felev = parseInt(felev.split(",")[0])
+        }
+
+        if (typeof felev === 'object'){
+          felev = 4
+        }
+
+        var type = ""
+        if (resp[i]["Előadás"]>0){
+          if (resp[i]["Gyakorlat"]==0 && resp[i]["Labor"]==0){
+            type = "EA"
+          }
+        }
+        else{
+          type = "GY"
+        }
+        
+        boxes[Math.floor(felev-1)].push({name:resp[i]["Tanegység"], color:"", credit: resp[i]["Kredit"], type: type, status:0})
+      }
+     
+    
+      //var subj = resp.split(",");
+
+
     }
+  }
+
+  getSubjectCredit(credit: Array<number>, idx:number): void{
+    this.creditSemester[idx] += credit[0]
+    this.completedCreditSemester[idx] += credit[1]
   }
 
   constructor() {
     this.xhttpSpecA = new XMLHttpRequest();
 
-    
 
-    //log(this.xhttpSpecA)
-
+    this.subjects.push([])
     this.xhttpSpecA.open('GET', backendAddress + ":" + backendPort + "/modellezo", true)
-    console.log(this.xhttpSpecA)
-    this.xhttpSpecA.onreadystatechange = () => this.getDataFromSpecA(this.xhttpSpecA, this.specABox);
+    this.xhttpSpecA.onreadystatechange = () => this.getDataFromSpec(this.xhttpSpecA, this.subjects[0]);
     this.xhttpSpecA.send();
+
+    for(let i=0;i<this.numberOfColumns;i++){
+      this.creditSemester[i] = 0;
+      this.completedCreditSemester[i] = 0;
+    }
 
   }
 
 
 }
 
-type SubjectBox = {
+type Subject = {
   name : string;
   color : string;
+  type : string;
+  credit : number;
+  status : number;
 }
 
