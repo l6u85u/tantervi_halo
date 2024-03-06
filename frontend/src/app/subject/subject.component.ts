@@ -1,4 +1,6 @@
 import { Component, Input, Output, EventEmitter} from '@angular/core';
+import { Subject } from '../app.component';
+import { AppComponent } from '../app.component';
 
 @Component({
   selector: 'app-subject',
@@ -9,26 +11,18 @@ export class SubjectComponent {
 @Input('parentData') public box: any;
 
 @Output()
-notify: EventEmitter<Array<number>> = new EventEmitter<Array<number>>();
+notify: EventEmitter<Subject> = new EventEmitter<Subject>();
 
 constructor(){
 
 }
 
 statusChange(){
-    this.box.status = (this.box.status + 1) % 3
-    if (this.box.status==1){
-      this.notify.emit([this.box.credit,0]);
-    }
-    else if (this.box.status==2){
-      this.notify.emit([0,this.box.credit]);
-    }
-    else {
-      var num = 0 - this.box.credit
-      this.notify.emit([num, num]);
-    }
-   
+    //this.box.status = (this.box.status + 1) % 3
+    this.notify.emit(this.box);
 }
 
 
 }
+
+
