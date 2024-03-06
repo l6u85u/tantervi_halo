@@ -24,14 +24,15 @@
 
       </div>
       <div class="subject_main container">
-        <div class="row">
+        <div class="row" cdkDropListGroup>
 
-          <div class="col"  *ngFor="let c of subjects[0]; let i = index" >
+          <div class="col" *ngFor="let c of subjects[0]; let i = index">
             <div class="semester">
               <p>{{i+1}}. félév</p>
             </div>
-            <div class="subjects">
-              <app-subject *ngFor="let s of subjects[0][i]; let j = index" [parentData]="s" (notify)="getSubjectCredit($event,i)">
+            <div class="subjects" cdkDropList (cdkDropListDropped)="drop($event)">
+              <app-subject class="subject_comp" *ngFor="let s of subjects[0][i]; let j = index" [parentData]="s"
+                (notify)="getSubjectCredit($event,i)" cdkDrag>
               </app-subject>
             </div>
             <div class="credits">
@@ -44,6 +45,35 @@
 
         </div>
 
+      </div>
+      <div class="subject_footer container">
+        <div class="row">
+          <div class="col progress_col">
+            <div class="progress_bar">
+              <div class="progress" [style.width]="completedCreditPerc">
+              </div>
+            </div>
+            <div class="progress_in_numbers">
+              {{completedCredit}}/180 kredit
+            </div>
+          </div>
+         
+          <div class="col-1 color_desc">
+            <ul>
+              <li id="completed">
+                Teljesített
+              </li>
+              <li id="inprogress">
+                Felvett
+              </li>
+              <li id="normal">
+                Nem felvett
+              </li>
+            </ul>
+            
+          </div>
+        </div>
+       
       </div>
 
     </div>
