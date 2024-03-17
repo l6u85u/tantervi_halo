@@ -1,11 +1,12 @@
 import { Component } from '@angular/core';
+import { FormGroup, FormControl, NgForm } from "@angular/forms";
 
 import { SubjectComponent } from './subject/subject.component';
 import {
   CdkDragDrop,
   CdkDrag,
   CdkDropList,
-  CdkDragPlaceholder
+  CdkDragPlaceholder,
 } from '@angular/cdk/drag-drop';
 
 var backendAddress: string = "https://127.0.0.1";
@@ -19,6 +20,15 @@ var backendPort: string = "8000";
 export class AppComponent {
   title = 'frontend';
 
+  public type = ""
+  public semester = 0
+
+  public modalBody = ""
+  public modalTitle = ""
+  public modalFirstButton = ""
+  public modalSecondButton = ""
+  public semesterToDelete = -1;
+
   public completedCredit = 0;
   public completedCreditPerc = "0%";
   public completedCreditSemester: Array<number> = [];
@@ -28,14 +38,24 @@ export class AppComponent {
 
   public subjects: Array<Array<Array<Subject>>> = [];
 
-  public xhttpSpecA: XMLHttpRequest;
+  public xhttpSpec: Array<XMLHttpRequest> = [];
 
   private borderCode = "";
+
+  public currentSpecName: string;
+  public currentSpecIdx: number;
+
+  public specNames: Array<string> = ["PTI Modellező", "PTI Tervező", "PTI Fejlesztő", "PTI Szoftvermérnök", "PTI Esti", "Computer Science"]
+  public specLinks: Array<string> = ["modellezo", "tervezo", "fejleszto", "szombathely", "esti", "angol"]
+
+  public thesis: Subject = { name: "Szakdolgozati konz.", code: "IP-08SZDPIBN18", color: "", credit: 20, type: "", status: 0, pre: [], over: [], border: 0 }
 
 
   //public specABox: SubjectBox = {color:"grey", name:""}
 
   private getDataFromSpec(xhttp: XMLHttpRequest, boxes: Array<Array<Subject>>) {
+
+  
 
     if (xhttp.readyState == 4 && xhttp.status == 200) {
       var resp = JSON.parse(JSON.parse(xhttp.responseText));
@@ -68,6 +88,7 @@ export class AppComponent {
         boxes[Math.floor(felev - 1)].push({ name: resp[i]["Tanegység"], code: resp[i]["Kód"], color: "", credit: resp[i]["Kredit"], type: type, status: 0, pre: [], over: [], border: 0 })
       }
 
+
       for (var i = 0; i < resp.length; i++) {
 
         var felev = resp[i]["Ajánlott félév"]
@@ -95,7 +116,7 @@ export class AppComponent {
         pre_code.forEach((code: string) => {
           var words = code.split(" ")
           var weak = false;
-          if (words.length > 1 && words[1] == "(gyenge)") {
+          if (words.length > 1 && (words[1] == "(gyenge)"|| words[1] == "(weak)")) {
             weak = true
           }
 
@@ -124,8 +145,9 @@ export class AppComponent {
             }
         })
 
-        console.log(boxes[col][idx])
       }
+
+      boxes[5].push(this.thesis)
 
 
       //var subj = resp.split(",");
@@ -138,28 +160,14 @@ export class AppComponent {
     var registered;
     var completed;
 
-    if (this.borderCode != "") {
-      for (let i = 0; i < this.subjects[0].length; i++)
-        for (let j = 0; j < this.subjects[0][i].length; j++) {
-          if (this.subjects[0][i][j].code == this.borderCode) {
-            this.subjects[0][i][j].border = 0
-            if (this.subjects[0][i][j].status!=2){
-              this.hidePrerequisites(this.subjects[0][i][j])
-            }
-            else if (this.subjects[0][i][j].status==2){
-              this.hideOverlays(this.subjects[0][i][j])
-            }
-            break;
-          }
-        }
-    }
+    this.changeBorderCode(subj.code)
 
     subj.border = 1
-    this.borderCode = subj.code
+    //this.borderCode = subj.code
 
     if (subj.status == 0) {
       this.showPrerequisites(subj)
-      if (!this.checkPrerequisites(subj)){
+      if (!this.checkPrerequisites(subj)) {
         return
       }
       registered = subj.credit
@@ -188,15 +196,21 @@ export class AppComponent {
     this.completedCreditPerc = this.completedCredit / 18 * 10 + "%"
   }
 
-  checkPrerequisites(subj: Subject) : Boolean{
-    var pre : Array<string> = []
+  checkPrerequisites(subj: Subject): Boolean {
+    var pre: Array<string> = []
     subj.pre.forEach(elem => {
-      if (elem.subject.status != 2){
-        pre.push(elem.subject.name + " " + elem.subject.type)
+      if (elem.subject.status != 2) {
+        if (elem.subject.status==0 && elem.weak){
+        pre.push(elem.subject.name + " " + elem.subject.type + " (gyenge)")
+        }
+        else if (elem.subject.status==0 || !elem.weak) {
+          pre.push(elem.subject.name + " " + elem.subject.type)
+        }
+       
       }
     });
 
-    if (pre.length > 0){
+    if (pre.length > 0) {
       var resp = "A következő előfeltételek nem teljesültek:\n"
       pre.forEach(e => {
         resp += e + "\n"
@@ -204,17 +218,17 @@ export class AppComponent {
       alert(resp);
       return false;
     }
-    
+
     return true
   }
 
-  showPrerequisites(subj: Subject){
+  showPrerequisites(subj: Subject) {
     subj.pre.forEach(elem => {
       elem.subject.border = 2
     });
   }
 
-  hidePrerequisites(subj: Subject){
+  hidePrerequisites(subj: Subject) {
     subj.pre.forEach(elem => {
       elem.subject.border = 0
     });
@@ -226,29 +240,50 @@ export class AppComponent {
     });
   }
 
-  hideOverlays(subj: Subject){
+  hideOverlays(subj: Subject) {
     subj.over.forEach(elem => {
       elem.border = 0
     });
   }
 
-  resetOverlays(subj: Subject){
+  changeBorderCode(newValue: string) {
+
+    if (this.borderCode != "") {
+      for (let i = 0; i < this.subjects[this.currentSpecIdx].length; i++)
+        for (let j = 0; j < this.subjects[this.currentSpecIdx][i].length; j++) {
+          if (this.subjects[this.currentSpecIdx][i][j].code == this.borderCode) {
+            this.subjects[this.currentSpecIdx][i][j].border = 0
+            if (this.subjects[this.currentSpecIdx][i][j].status != 2) {
+              this.hidePrerequisites(this.subjects[this.currentSpecIdx][i][j])
+            }
+            else if (this.subjects[this.currentSpecIdx][i][j].status == 2) {
+              this.hideOverlays(this.subjects[this.currentSpecIdx][i][j])
+            }
+            break;
+          }
+        }
+    }
+
+    this.borderCode = newValue
+  }
+
+  resetOverlays(subj: Subject) {
     subj.over.forEach(elem => {
-      if (elem.status!=0){
+      if (elem.status != 0) {
         var col = -1;
-        for (let i=0;i<this.numberOfColumns;i++){
-          if (this.subjects[0][i].includes(elem)){
+        for (let i = 0; i < this.numberOfColumns; i++) {
+          if (this.subjects[this.currentSpecIdx][i].includes(elem)) {
             col = i;
             break;
           }
         }
-        if (elem.status==1){
-         this.changeSubjectCredit([-1 * elem.credit,0],col)
+        if (elem.status == 1) {
+          this.changeSubjectCredit([-1 * elem.credit, 0], col)
         }
-        else if (elem.status==2){
-          this.changeSubjectCredit([-1 * elem.credit, -1 * elem.credit],col)
+        else if (elem.status == 2) {
+          this.changeSubjectCredit([-1 * elem.credit, -1 * elem.credit], col)
         }
-        elem.status=0;
+        elem.status = 0;
       }
     });
   }
@@ -271,18 +306,18 @@ export class AppComponent {
   }
 
   moveItemInArray(columnIdx: number, prevIdx: number, currentIdx: number) {
-    const itemToMove = this.subjects[0][columnIdx][prevIdx];
+    const itemToMove = this.subjects[this.currentSpecIdx][columnIdx][prevIdx];
 
-    this.subjects[0][columnIdx].splice(prevIdx, 1);
+    this.subjects[this.currentSpecIdx][columnIdx].splice(prevIdx, 1);
 
-    this.subjects[0][columnIdx].splice(currentIdx, 0, itemToMove);
+    this.subjects[this.currentSpecIdx][columnIdx].splice(currentIdx, 0, itemToMove);
   }
 
   transferArrayItem(prevColumnIdx: number, columnIdx: number, prevIdx: number, currentIdx: number) {
-    const itemToMove = this.subjects[0][prevColumnIdx][prevIdx];
+    const itemToMove = this.subjects[this.currentSpecIdx][prevColumnIdx][prevIdx];
 
-    this.subjects[0][prevColumnIdx].splice(prevIdx, 1);
-    this.subjects[0][columnIdx].splice(currentIdx, 0, itemToMove);
+    this.subjects[this.currentSpecIdx][prevColumnIdx].splice(prevIdx, 1);
+    this.subjects[this.currentSpecIdx][columnIdx].splice(currentIdx, 0, itemToMove);
 
     if (itemToMove.status == 1) {
       this.changeSubjectCredit([- 1 * itemToMove.credit, 0], prevColumnIdx)
@@ -295,20 +330,103 @@ export class AppComponent {
 
   }
 
+  changeSpec(index: number) {
+    this.currentSpecIdx = index;
+    this.currentSpecName = this.specNames[index]
+    this.updateCredits(index)
+    this.changeBorderCode("")
+  }
+
+  updateCredits(index: number){
+    this.completedCredit = 0;
+    for (let i=0;i<this.creditSemester.length;i++){
+      this.creditSemester[i] = 0
+      this.completedCreditSemester[i] = 0
+
+      for (let j=0; j<this.subjects[index][i].length; j++){
+        var subj = this.subjects[index][i][j]
+        if (subj.status==1){
+          this.creditSemester[i] += subj.credit
+        }
+        else if (subj.status==2){
+          this.creditSemester[i] += subj.credit
+          this.completedCreditSemester[i] += subj.credit
+        }
+      }
+
+      this.completedCredit +=  this.completedCreditSemester[i]
+    }
+
+    this.completedCreditPerc = this.completedCredit / 18 * 10 + "%"
+  }
+
   constructor() {
-    this.xhttpSpecA = new XMLHttpRequest();
 
+    for (let i = 0; i < this.specLinks.length; i++){
+      var xhttp = new XMLHttpRequest();
+      this.xhttpSpec.push(xhttp)
+    }
 
-    this.subjects.push([])
-    this.xhttpSpecA.open('GET', backendAddress + ":" + backendPort + "/modellezo", true)
-    this.xhttpSpecA.onreadystatechange = () => this.getDataFromSpec(this.xhttpSpecA, this.subjects[0]);
-    this.xhttpSpecA.send();
+    for (let i = 0; i < this.specLinks.length; i++) {
+      this.subjects.push([])
+      this.xhttpSpec[i].open('GET', backendAddress + ":" + backendPort + "/" + this.specLinks[i], true)
+      this.xhttpSpec[i].onreadystatechange = () => this.getDataFromSpec(this.xhttpSpec[i], this.subjects[i]);
+      this.xhttpSpec[i].send();
+    }
+
 
     for (let i = 0; i < this.numberOfColumns; i++) {
       this.creditSemester[i] = 0;
       this.completedCreditSemester[i] = 0;
     }
 
+    this.currentSpecName = this.specNames[0]
+    this.currentSpecIdx = 0;
+
+  }
+
+  addSemester(){
+    this.numberOfColumns += 1;
+    this.subjects[this.currentSpecIdx].push([])
+    this.creditSemester.push(0)
+    this.completedCreditSemester.push(0);
+  }
+
+  deleteSemester(){
+    var index = this.semesterToDelete
+    this.numberOfColumns -= 1;
+    this.subjects[this.currentSpecIdx].splice(index, 1)
+    this.completedCredit -= this.completedCreditSemester[index]
+    this.creditSemester.splice(index, 1)
+    this.completedCreditSemester.splice(index, 1)
+    this.completedCreditPerc = this.completedCredit / 18 * 10 + "%"
+  }
+
+  setModalText(index: number, type: string){
+    if (type=="delete semester"){
+    this.semesterToDelete = index
+    this.modalTitle = "Félév törlése"
+    this.modalBody = "Ha törlöd a féléved, akkor az összes adott féléves tárgy is törlődni fog"
+    this.modalFirstButton = "Rendben"
+    this.modalSecondButton = "Mégsem"
+    }
+    else {
+    this.modalTitle = "Félév törlése"
+    this.modalBody = "Ha törlöd a féléved, akkor az összes adott féléves tárgy is törlődni fog"
+    this.modalFirstButton = "Rendben"
+    this.modalSecondButton = "Mégsem"
+    }
+  }
+
+  submitForm(form: NgForm) {
+    var resp = form.value
+    console.log(form.value.name); 
+    console.log(form.value.code); 
+    console.log(form.value.credit); 
+    console.log(form.value.type); 
+    console.log(form.value.semester); 
+    var subj: Subject = { name: resp.name, code: resp.code, color: "", credit: resp.credit, type: resp.type, status: 0, pre: [], over: [], border: 0 }
+    this.subjects[this.currentSpecIdx][resp.semester].push(subj)
   }
 
 

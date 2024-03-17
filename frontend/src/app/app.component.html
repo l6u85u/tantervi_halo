@@ -5,6 +5,26 @@
 </header>
 
 <main>
+  <div class="modal fade" id="deleteSemesterModal" tabindex="-1" aria-labelledby="deleteSemesterModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="deleteSemesterModalLabel">{{modalTitle}}</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          {{modalBody}}
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{modalSecondButton}}</button>
+          <button type="button" class="btn btn-primary" data-bs-dismiss="modal"
+            (click)="deleteSemester()">{{modalFirstButton}}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div>
     <h1>
       ELTE IK - Tantervi háló
@@ -19,61 +39,142 @@
         megjelenítésére.
       </p>
     </div>
+
+
     <div>
       <div class="subject_header">
+        <div class="dropdown">
+          <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown"
+            aria-expanded="false">
+            {{currentSpecName}}
+          </button>
+          <ul class="dropdown-menu">
+            <li *ngFor="let s of specNames; let i = index">
+              <button (click)="changeSpec(i)" class="dropdown-item" type="button">{{specNames[i]}}</button>
+            </li>
+          </ul>
+        </div>
+
+        <div class="operation_icons">
+          <div class="btn-group dropend">
+            <button class="add_columns_icon btn" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              <span class="material-symbols-outlined">
+                add_circle
+              </span>
+              <p>
+                Tárgy felv.
+              </p>
+            </button>
+            <div class="dropdown-menu">
+              <form #newSubjectForm="ngForm" (ngSubmit)="submitForm(newSubjectForm)" class="new_subject_form px-4 py-3">
+                <div class="mb-3">
+                  <label for="code" class="form-label">Kód</label>
+                  <input type="text" class="form-control" id="code" placeholder="IP-18PROGEG" name="code" ngModel>
+                </div>
+                <div class="mb-3">
+                  <label for="name" class="form-label">Név</label>
+                  <input type="text" class="form-control" id="name" placeholder="Programozás" name="name" ngModel>
+                </div>
+                <div class="mb-3">
+                  <label for="credit" class="form-label">Kredit</label>
+                  <input type="number" class="form-control" id="credit" placeholder="5" name="credit" ngModel>
+                </div>
+                <div class="mb-3">
+                  <div class="subj_type">
+                    <label class="radio-inline"><input type="radio" name="type" checked value="EA" ngModel>EA</label>
+                    <label class="radio-inline"><input type="radio" name="type" value="GY" [(ngModel)]="type">GY</label>
+                    <label class="radio-inline"><input type="radio" name="type" value="" [(ngModel)]="type">EA+GY</label>
+                  </div>
+                </div>
+                <div class="mb-3">
+                  <label for="semesterNumber" class="form-label" >Félév</label>
+                  <select class="form-control" id="semesterNumber" name="semester" ngModel>
+                    <option *ngFor="let c of subjects[currentSpecIdx]; let i = index" value={{i}}>{{i+1}}</option>
+                  </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Felvesz</button>
+              </form>
+            </div>
+          </div>
+          <button class="btn add_columns_icon" (click)="addSemester()">
+            <span class="material-symbols-outlined">
+              add_box
+            </span>
+            <p>
+              Félév felv.
+            </p>
+          </button>
+        </div>
 
       </div>
-      <div class="subject_main container">
-        <div class="row" cdkDropListGroup>
+    </div>
 
-          <div class="col" *ngFor="let c of subjects[0]; let i = index">
-            <div class="semester">
-              <p>{{i+1}}. félév</p>
-            </div>
-            <div class="subjects" cdkDropList (cdkDropListDropped)="drop($event)">
-              <app-subject class="subject_comp" *ngFor="let s of subjects[0][i]; let j = index" [parentData]="s"
-                (notify)="getSubjectCredit($event,i)" cdkDrag>
-              </app-subject>
-            </div>
-            <div class="credits">
-              <p>Felvett: {{creditSemester[i]}}</p>
-              <p>Teljesített: {{completedCreditSemester[i]}}</p>
-            </div>
+    <div class="subject_main container" (click)="changeBorderCode('')">
+      <div class="row flex-nowrap overflow-auto" cdkDropListGroup>
 
+        <div class="col" *ngFor="let c of subjects[currentSpecIdx]; let i = index">
+          <div class="semester">
+            <div class="btn-group dropend">
+              <button class="btn btn-secondary" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                {{i+1}}. félév
+              </button>
+              <ul class="dropdown-menu">
+                <li>
+                  <button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#deleteSemesterModal"
+                    (click)="setModalText(i,'delete semester')" type="button">Félév törlése</button>
+                </li>
+              </ul>
+            </div>
           </div>
-
+          <div class="subjects" cdkDropList (cdkDropListDropped)="drop($event)">
+            <app-subject class="subject_comp" *ngFor="let s of subjects[currentSpecIdx][i]; let j = index"
+              [parentData]="s" (notify)="getSubjectCredit($event,i)" cdkDrag [cdkDragDisabled]="s.status!==0"
+              click-stop-propagation>
+            </app-subject>
+          </div>
+          <div class="credits">
+            <p>Felvett: {{creditSemester[i]}}</p>
+            <p>Teljesített: {{completedCreditSemester[i]}}</p>
+          </div>
 
         </div>
 
       </div>
-      <div class="subject_footer container">
-        <div class="row">
-          <div class="col progress_col">
-            <div class="progress_bar">
-              <div class="progress" [style.width]="completedCreditPerc">
-              </div>
-            </div>
-            <div class="progress_in_numbers">
-              {{completedCredit}}/180 kredit
+
+    </div>
+    <div class="subject_footer container">
+
+      <div class="row">
+        <div class="col progress_col">
+          <div class="progress_bar">
+            <div class="progress" [style.width]="completedCreditPerc">
             </div>
           </div>
-         
-          <div class="col-1 color_desc">
-            <ul>
-              <li id="completed">
-                Teljesített
-              </li>
-              <li id="inprogress">
-                Felvett
-              </li>
-              <li id="normal">
-                Nem felvett
-              </li>
-            </ul>
-            
+          <div class="progress_in_numbers">
+            {{completedCredit}}/180 kredit
           </div>
         </div>
-       
+
+        <div class="col-1 color_desc">
+          <ul>
+            <li id="completed">
+              Teljesített
+            </li>
+            <li id="inprogress">
+              Felvett
+            </li>
+            <li id="normal">
+              Nem felvett
+            </li>
+            <li id="prerequisite">
+              Közv. előkövetelmény
+            </li>
+            <li id="overlay">
+              Ráépülő
+            </li>
+          </ul>
+
+        </div>
       </div>
 
     </div>
