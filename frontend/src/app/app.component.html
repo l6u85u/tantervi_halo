@@ -68,31 +68,54 @@
             <div class="dropdown-menu">
               <form #newSubjectForm="ngForm" (ngSubmit)="submitForm(newSubjectForm)" class="new_subject_form px-4 py-3">
                 <div class="mb-3">
-                  <label for="code" class="form-label">Kód</label>
-                  <input type="text" class="form-control" id="code" placeholder="IP-18PROGEG" name="code" ngModel>
-                </div>
-                <div class="mb-3">
-                  <label for="name" class="form-label">Név</label>
-                  <input type="text" class="form-control" id="name" placeholder="Programozás" name="name" ngModel>
-                </div>
-                <div class="mb-3">
-                  <label for="credit" class="form-label">Kredit</label>
-                  <input type="number" class="form-control" id="credit" placeholder="5" name="credit" ngModel>
-                </div>
-                <div class="mb-3">
-                  <div class="subj_type">
-                    <label class="radio-inline"><input type="radio" name="type" checked value="EA" ngModel>EA</label>
-                    <label class="radio-inline"><input type="radio" name="type" value="GY" [(ngModel)]="type">GY</label>
-                    <label class="radio-inline"><input type="radio" name="type" value="" [(ngModel)]="type">EA+GY</label>
-                  </div>
-                </div>
-                <div class="mb-3">
-                  <label for="semesterNumber" class="form-label" >Félév</label>
-                  <select class="form-control" id="semesterNumber" name="semester" ngModel>
-                    <option *ngFor="let c of subjects[currentSpecIdx]; let i = index" value={{i}}>{{i+1}}</option>
+                  <label for="spec" class="form-label">Típus</label>
+                  <select class="form-control" id="spec" name="spec" [(ngModel)]="specType">
+                    <option value="obligatory">
+                      Kötelezően választható
+                    </option>
+                    <option value="not obligatory">
+                      Szabadon választható
+                    </option>
                   </select>
                 </div>
-                <button type="submit" class="btn btn-primary">Felvesz</button>
+                <div *ngIf="specType=='not obligatory'">
+                  <div class="mb-3">
+                    <label for="code" class="form-label">Kód</label>
+                    <input type="text" class="form-control" id="code" placeholder="IP-18PROGEG" name="code" ngModel>
+                  </div>
+                  <div class="mb-3">
+                    <label for="name" class="form-label">Név</label>
+                    <input type="text" class="form-control" id="name" placeholder="Programozás" name="name" ngModel>
+                  </div>
+                  <div class="mb-3">
+                    <label for="credit" class="form-label">Kredit</label>
+                    <input type="number" class="form-control" id="credit" placeholder="5" name="credit" ngModel>
+                  </div>
+                  <div class="mb-3">
+                    <div class="subj_type">
+                      <label class="radio-inline"><input type="radio" name="type" checked value="EA" ngModel>EA</label>
+                      <label class="radio-inline"><input type="radio" name="type" value="GY" ngModel>GY</label>
+                      <label class="radio-inline"><input type="radio" name="type" value="" ngModel>EA+GY</label>
+                    </div>
+                  </div>
+                </div>
+                <div *ngIf="specType=='obligatory'">
+                  <div class="mb-3">
+                  <label for="obligSpecSubject" class="form-label" >Név</label>
+                  <select class="form-control" id="obligSpecSubject" name="obligName" ngModel>
+                    <option *ngFor="let s of obligatorySpecSubjects[currentSpecIdx]; let i = index" value={{i}}>{{s.name}}  {{s.type}}</option>
+                  </select>
+                </div>
+                </div>
+                <div *ngIf="specType!==''">
+                  <div class="mb-3">
+                    <label for="semesterNumber" class="form-label">Félév</label>
+                    <select class="form-control" id="semesterNumber" name="semester" ngModel>
+                      <option *ngFor="let c of subjects[currentSpecIdx]; let i = index" value={{i}}>{{i+1}}</option>
+                    </select>
+                  </div>
+                  <button type="submit" class="btn btn-primary">Felvesz</button>
+                </div>
               </form>
             </div>
           </div>
@@ -128,7 +151,7 @@
           </div>
           <div class="subjects" cdkDropList (cdkDropListDropped)="drop($event)">
             <app-subject class="subject_comp" *ngFor="let s of subjects[currentSpecIdx][i]; let j = index"
-              [parentData]="s" (notify)="getSubjectCredit($event,i)" cdkDrag [cdkDragDisabled]="s.status!==0"
+              [parentData]="s" (notifyMoreInfo)="showSubjectInfo($event,i)" (notifyStatusChange)="getSubjectCredit($event,i)" cdkDrag [cdkDragDisabled]="s.status!==0"
               click-stop-propagation>
             </app-subject>
           </div>

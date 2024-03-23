@@ -5,5 +5,39 @@
     <div class="div_credit">
         <p class="subject_credit"> {{box.credit}} kredit </p>
     </div>
-   
+    <div class="dropend" id="info">
+        <div class="more_icon" click-stop-propagation data-bs-toggle="dropdown" aria-haspopup="true"
+            aria-expanded="false">
+            <span class="material-symbols-outlined">
+                more_horiz
+            </span>
+        </div>
+        <div class="dropdown-menu info-subject">
+            <div>
+                <p class="infoText"> 
+                    <span>Név:</span> {{box.name}} {{box.type}}
+                    <br>
+                    <span>Kód:</span> {{box.code}}
+                    <br>
+                    <span>Kredit:</span> {{box.credit}}
+                    <br>
+                    <span>Ajánlott félév:</span> {{box.proposedSemester}}
+                    <br>
+                    <span>Előköv:</span> {{showPre()}}
+                    <br>
+                    <span>Típus:</span> 
+                    <br>
+                    <span>Ismeretkör:</span>
+                </p>
+            </div>
+            <button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#deleteSemesterModal"
+                (click)="deleteSubject()" click-stop-propagation type="button">
+                <span class="material-symbols-outlined">
+                    delete
+                </span>
+            </button>
+
+        </div>
+    </div>
+
 </div>

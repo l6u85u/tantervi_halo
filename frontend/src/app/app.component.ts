@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { FormGroup, FormControl, NgForm } from "@angular/forms";
-
 import { SubjectComponent } from './subject/subject.component';
+import swal from 'sweetalert';
 import {
   CdkDragDrop,
   CdkDrag,
@@ -18,10 +18,10 @@ var backendPort: string = "8000";
   styleUrl: './app.component.css'
 })
 export class AppComponent {
+
   title = 'frontend';
 
-  public type = ""
-  public semester = 0
+  public MAX_COLUMN_NUMBERS = 18;
 
   public modalBody = ""
   public modalTitle = ""
@@ -37,6 +37,7 @@ export class AppComponent {
   public numberOfColumns: number = 6;
 
   public subjects: Array<Array<Array<Subject>>> = [];
+  public obligatorySpecSubjects: Array<Array<Subject>> = [];
 
   public xhttpSpec: Array<XMLHttpRequest> = [];
 
@@ -45,116 +46,201 @@ export class AppComponent {
   public currentSpecName: string;
   public currentSpecIdx: number;
 
+  public specType: String = "obligatory";
+
   public specNames: Array<string> = ["PTI Modellező", "PTI Tervező", "PTI Fejlesztő", "PTI Szoftvermérnök", "PTI Esti", "Computer Science"]
   public specLinks: Array<string> = ["modellezo", "tervezo", "fejleszto", "szombathely", "esti", "angol"]
 
-  public thesis: Subject = { name: "Szakdolgozati konz.", code: "IP-08SZDPIBN18", color: "", credit: 20, type: "", status: 0, pre: [], over: [], border: 0 }
+  public thesis: Subject = { name: "Szakdolgozati konz.", code: "IP-08SZDPIBN18", color: "", credit: 20, type: "", status: 0, pre: [], over: [], border: 0, proposedSemester: 6, spec: "obligatory" }
 
 
   //public specABox: SubjectBox = {color:"grey", name:""}
 
-  private getDataFromSpec(xhttp: XMLHttpRequest, boxes: Array<Array<Subject>>) {
+  private getDataFromSpec(xhttp: XMLHttpRequest, obligBoxes: Array<Array<Subject>>, obligSpecBoxes: Array<Subject>) {
 
-  
 
     if (xhttp.readyState == 4 && xhttp.status == 200) {
       var resp = JSON.parse(JSON.parse(xhttp.responseText));
 
       for (let i = 0; i < this.numberOfColumns; i++) {
-        boxes.push([])
+        obligBoxes.push([])
       }
 
-      for (var i = 0; i < resp.length; i++) {
-        var felev = resp[i]["Ajánlott félév"]
+      this.getObligatoryData(resp[0], obligBoxes)
+      this.getObligatorySpecData(resp[1], obligSpecBoxes, obligBoxes)
 
-        if (typeof felev === 'string') {
-          felev = parseInt(felev.split(",")[0])
+    }
+  }
+
+  private getObligatoryData(resp: any, obligBoxes: Array<Array<Subject>>) {
+
+    for (var i = 0; i < resp.length; i++) {
+      var felev = resp[i]["Ajánlott félév"]
+
+      if (typeof felev === 'string') {
+        felev = parseInt(felev.split(",")[0])
+      }
+
+      if (typeof felev === 'object') {
+        felev = 4
+      }
+
+      var type = ""
+      if (resp[i]["Előadás"] > 0) {
+        if (resp[i]["Gyakorlat"] == 0 && resp[i]["Labor"] == 0) {
+          type = "EA"
+        }
+      }
+      else {
+        type = "GY"
+      }
+
+      obligBoxes[Math.floor(felev - 1)].push({ name: resp[i]["Tanegység"], code: resp[i]["Kód"], color: "", credit: resp[i]["Kredit"], type: type, status: 0, pre: [], over: [], border: 0, proposedSemester: felev, spec: "obligatory" })
+    }
+
+
+    for (var i = 0; i < resp.length; i++) {
+
+      var felev = resp[i]["Ajánlott félév"]
+      if (typeof felev === 'string') {
+        felev = parseInt(felev.split(",")[0])
+      }
+      if (typeof felev === 'object') {
+        felev = 4
+      }
+
+      var col = Math.floor(felev - 1)
+      var idx = 0;
+      for (let j = 0; j < obligBoxes[col].length; j++) {
+        if (obligBoxes[col][j].code == resp[i]["Kód"]) {
+          idx = j;
+          break
+        }
+      }
+
+      var pre_code = []
+      if (resp[i]["Előfeltétel(ek)"] !== null) {
+        pre_code = resp[i]["Előfeltétel(ek)"].split(",").map((str: string) => str.trim())
+      }
+
+      pre_code.forEach((code: string) => {
+        var words = code.split(" ")
+        var weak = false;
+        if (words.length > 1 && (words[1] == "(gyenge)" || words[1] == "(weak)")) {
+          weak = true
         }
 
-        if (typeof felev === 'object') {
-          felev = 4
-        }
-
-        var type = ""
-        if (resp[i]["Előadás"] > 0) {
-          if (resp[i]["Gyakorlat"] == 0 && resp[i]["Labor"] == 0) {
-            type = "EA"
+        for (let j = 0; j <= col; j++)
+          for (let l = 0; l < obligBoxes[j].length; l++) {
+            if (obligBoxes[j][l].code == words[0]) {
+              obligBoxes[col][idx].pre.push({ subject: obligBoxes[j][l], weak: weak })
+              break
+            }
           }
-        }
-        else {
-          type = "GY"
-        }
 
-        boxes[Math.floor(felev - 1)].push({ name: resp[i]["Tanegység"], code: resp[i]["Kód"], color: "", credit: resp[i]["Kredit"], type: type, status: 0, pre: [], over: [], border: 0 })
+      })
+
+      var over_code = []
+      if (resp[i]["Ráépülő"] != "") {
+        over_code = resp[i]["Ráépülő"].split(",").map((str: string) => str.trim())
       }
 
+      over_code.forEach((code: string) => {
+        for (let j = col; j < obligBoxes.length; j++)
+          for (let l = 0; l < obligBoxes[j].length; l++) {
+            if (obligBoxes[j][l].code == code) {
+              obligBoxes[col][idx].over.push(obligBoxes[j][l])
+              break
+            }
+          }
+      })
 
-      for (var i = 0; i < resp.length; i++) {
+    }
 
-        var felev = resp[i]["Ajánlott félév"]
-        if (typeof felev === 'string') {
-          felev = parseInt(felev.split(",")[0])
+    obligBoxes[5].push(this.thesis)
+  }
+
+  private getObligatorySpecData(resp: any, boxes: Array<Subject>, obligBoxes: Array<Array<Subject>>) {
+    for (var i = 0; i < resp.length; i++) {
+      var felev = resp[i]["Ajánlott félév"]
+
+      if (typeof felev === 'string') {
+        felev = parseInt(felev.split(",")[0])
+      }
+
+      if (typeof felev === 'object') {
+        felev = 4
+      }
+
+      var type = ""
+      if (resp[i]["Előadás"] > 0) {
+        if (resp[i]["Gyakorlat"] == 0 && resp[i]["Labor"] == 0) {
+          type = "EA"
         }
-        if (typeof felev === 'object') {
-          felev = 4
+      }
+      else {
+        type = "GY"
+      }
+
+      boxes.push({ name: resp[i]["Tanegység"], code: resp[i]["Kód"], color: "", credit: resp[i]["Kredit"], type: type, status: 0, pre: [], over: [], border: 0, proposedSemester: felev, spec: "obligatory spec" })
+    }
+
+
+    for (var i = 0; i < boxes.length; i++) {
+
+      var pre_code = []
+      if (resp[i]["Előfeltétel(ek)"] !== null) {
+        pre_code = resp[i]["Előfeltétel(ek)"].split(",").map((str: string) => str.trim())
+      }
+
+      pre_code.forEach((code: string) => {
+        var words = code.split(" ")
+        var weak = false;
+        if (words.length > 1 && (words[1] == "(gyenge)" || words[1] == "(weak)")) {
+          weak = true
         }
 
-        var col = Math.floor(felev - 1)
-        var idx = 0;
-        for (let j = 0; j < boxes[col].length; j++) {
-          if (boxes[col][j].code == resp[i]["Kód"]) {
-            idx = j;
+        var found = false;
+        for (let j = 0; j < boxes.length; j++) {
+          if (boxes[j].code == words[0]) {
+            boxes[i].pre.push({ subject: boxes[j], weak: weak })
+            found = true
             break
           }
         }
 
-        var pre_code = []
-        if (resp[i]["Előfeltétel(ek)"] !== null) {
-          pre_code = resp[i]["Előfeltétel(ek)"].split(",").map((str: string) => str.trim())
-        }
-
-        pre_code.forEach((code: string) => {
-          var words = code.split(" ")
-          var weak = false;
-          if (words.length > 1 && (words[1] == "(gyenge)"|| words[1] == "(weak)")) {
-            weak = true
-          }
-
-          for (let j = 0; j <= col; j++)
-            for (let l = 0; l < boxes[j].length; l++) {
-              if (boxes[j][l].code == words[0]) {
-                boxes[col][idx].pre.push({ subject: boxes[j][l], weak: weak })
+        if (!found) {
+          for (let j = 0; j < obligBoxes.length && !found; j++)
+            for (let l = 0; l < obligBoxes[j].length; l++) {
+              if (obligBoxes[j][l].code == words[0]) {
+                boxes[i].pre.push({ subject: obligBoxes[j][l], weak: weak })
+                found = true
                 break
               }
             }
-
-        })
-
-        var over_code = []
-        if (resp[i]["Ráépülő"] != "") {
-          over_code = resp[i]["Ráépülő"].split(",").map((str: string) => str.trim())
         }
 
-        over_code.forEach((code: string) => {
-          for (let j = col; j < boxes.length; j++)
-            for (let l = 0; l < boxes[j].length; l++) {
-              if (boxes[j][l].code == code) {
-                boxes[col][idx].over.push(boxes[j][l])
-                break
-              }
-            }
-        })
 
+      })
+
+      var over_code = []
+      if (resp[i]["Ráépülő"] != "") {
+        over_code = resp[i]["Ráépülő"].split(",").map((str: string) => str.trim())
       }
 
-      boxes[5].push(this.thesis)
-
-
-      //var subj = resp.split(",");
-
+      over_code.forEach((code: string) => {
+        for (let j = 0; j < boxes.length; j++) {
+          if (boxes[j].code == code) {
+            boxes[i].over.push(boxes[j])
+            break
+          }
+        }
+      })
 
     }
+
   }
+
 
   getSubjectCredit(subj: Subject, idx: number): void {
     var registered;
@@ -200,13 +286,13 @@ export class AppComponent {
     var pre: Array<string> = []
     subj.pre.forEach(elem => {
       if (elem.subject.status != 2) {
-        if (elem.subject.status==0 && elem.weak){
-        pre.push(elem.subject.name + " " + elem.subject.type + " (gyenge)")
+        if (elem.subject.status == 0 && elem.weak) {
+          pre.push(elem.subject.name + " " + elem.subject.type + " (gyenge)")
         }
-        else if (elem.subject.status==0 || !elem.weak) {
+        else if (elem.subject.status == 0 || !elem.weak) {
           pre.push(elem.subject.name + " " + elem.subject.type)
         }
-       
+
       }
     });
 
@@ -215,7 +301,7 @@ export class AppComponent {
       pre.forEach(e => {
         resp += e + "\n"
       })
-      alert(resp);
+      swal(resp);
       return false;
     }
 
@@ -337,24 +423,24 @@ export class AppComponent {
     this.changeBorderCode("")
   }
 
-  updateCredits(index: number){
+  updateCredits(index: number) {
     this.completedCredit = 0;
-    for (let i=0;i<this.creditSemester.length;i++){
+    for (let i = 0; i < this.creditSemester.length; i++) {
       this.creditSemester[i] = 0
       this.completedCreditSemester[i] = 0
 
-      for (let j=0; j<this.subjects[index][i].length; j++){
+      for (let j = 0; j < this.subjects[index][i].length; j++) {
         var subj = this.subjects[index][i][j]
-        if (subj.status==1){
+        if (subj.status == 1) {
           this.creditSemester[i] += subj.credit
         }
-        else if (subj.status==2){
+        else if (subj.status == 2) {
           this.creditSemester[i] += subj.credit
           this.completedCreditSemester[i] += subj.credit
         }
       }
 
-      this.completedCredit +=  this.completedCreditSemester[i]
+      this.completedCredit += this.completedCreditSemester[i]
     }
 
     this.completedCreditPerc = this.completedCredit / 18 * 10 + "%"
@@ -362,15 +448,16 @@ export class AppComponent {
 
   constructor() {
 
-    for (let i = 0; i < this.specLinks.length; i++){
+    for (let i = 0; i < this.specLinks.length; i++) {
       var xhttp = new XMLHttpRequest();
       this.xhttpSpec.push(xhttp)
     }
 
     for (let i = 0; i < this.specLinks.length; i++) {
+      this.obligatorySpecSubjects.push([])
       this.subjects.push([])
       this.xhttpSpec[i].open('GET', backendAddress + ":" + backendPort + "/" + this.specLinks[i], true)
-      this.xhttpSpec[i].onreadystatechange = () => this.getDataFromSpec(this.xhttpSpec[i], this.subjects[i]);
+      this.xhttpSpec[i].onreadystatechange = () => this.getDataFromSpec(this.xhttpSpec[i], this.subjects[i], this.obligatorySpecSubjects[i]);
       this.xhttpSpec[i].send();
     }
 
@@ -385,14 +472,19 @@ export class AppComponent {
 
   }
 
-  addSemester(){
-    this.numberOfColumns += 1;
-    this.subjects[this.currentSpecIdx].push([])
-    this.creditSemester.push(0)
-    this.completedCreditSemester.push(0);
+  addSemester() {
+    if (this.numberOfColumns >= this.MAX_COLUMN_NUMBERS) {
+      swal("Elérted a maximális félévszámot, többet nem tudsz felvenni.")
+    }
+    else {
+      this.numberOfColumns += 1;
+      this.subjects[this.currentSpecIdx].push([])
+      this.creditSemester.push(0)
+      this.completedCreditSemester.push(0);
+    }
   }
 
-  deleteSemester(){
+  deleteSemester() {
     var index = this.semesterToDelete
     this.numberOfColumns -= 1;
     this.subjects[this.currentSpecIdx].splice(index, 1)
@@ -402,31 +494,55 @@ export class AppComponent {
     this.completedCreditPerc = this.completedCredit / 18 * 10 + "%"
   }
 
-  setModalText(index: number, type: string){
-    if (type=="delete semester"){
-    this.semesterToDelete = index
-    this.modalTitle = "Félév törlése"
-    this.modalBody = "Ha törlöd a féléved, akkor az összes adott féléves tárgy is törlődni fog"
-    this.modalFirstButton = "Rendben"
-    this.modalSecondButton = "Mégsem"
+  setModalText(index: number, type: string) {
+    if (type == "delete semester") {
+      this.semesterToDelete = index
+      this.modalTitle = "Félév törlése"
+      this.modalBody = "Ha törlöd a féléved, akkor az összes adott féléves tárgy is törlődni fog"
+      this.modalFirstButton = "Rendben"
+      this.modalSecondButton = "Mégsem"
     }
     else {
-    this.modalTitle = "Félév törlése"
-    this.modalBody = "Ha törlöd a féléved, akkor az összes adott féléves tárgy is törlődni fog"
-    this.modalFirstButton = "Rendben"
-    this.modalSecondButton = "Mégsem"
+      this.modalTitle = "Félév törlése"
+      this.modalBody = "Ha törlöd a féléved, akkor az összes adott féléves tárgy is törlődni fog"
+      this.modalFirstButton = "Rendben"
+      this.modalSecondButton = "Mégsem"
     }
   }
 
   submitForm(form: NgForm) {
     var resp = form.value
-    console.log(form.value.name); 
-    console.log(form.value.code); 
-    console.log(form.value.credit); 
-    console.log(form.value.type); 
-    console.log(form.value.semester); 
-    var subj: Subject = { name: resp.name, code: resp.code, color: "", credit: resp.credit, type: resp.type, status: 0, pre: [], over: [], border: 0 }
-    this.subjects[this.currentSpecIdx][resp.semester].push(subj)
+    if (this.specType == "not obligatory") {
+      var subj: Subject = { name: resp.name, code: resp.code, color: "", credit: resp.credit, type: resp.type, status: 0, pre: [], over: [], border: 0, proposedSemester: 0, spec: "not obligatory spec" }
+      this.subjects[this.currentSpecIdx][resp.semester].push(subj)
+    }
+    else if (this.specType == "obligatory") {
+      var idx = resp.obligName
+      var subj = this.obligatorySpecSubjects[this.currentSpecIdx][idx]
+      this.updatePrerequisites(subj)
+      this.subjects[this.currentSpecIdx][resp.semester].push(subj)
+    }
+
+  }
+
+  updatePrerequisites(subject: Subject) {
+    for (let i = 0; i < subject.pre.length; i++) {
+      if (subject.pre[i].subject.spec == "obligatory") {
+        this.updatePrerequisite(subject, subject.pre[i].subject)
+      }
+    }
+  }
+
+  updatePrerequisite(newOverSubject: Subject, subject: Subject) {
+    subject.over.push(newOverSubject)
+    subject.over = subject.over.concat(newOverSubject.over)
+    for (let i = 0; i < subject.pre.length; i++) {
+      this.updatePrerequisite(newOverSubject, subject.pre[i].subject)
+    }
+  }
+
+  showSubjectInfo(subj: Subject, idx: number): void{
+    
   }
 
 
@@ -442,6 +558,8 @@ export type Subject = {
   pre: Array<Prerequisite>;
   over: Array<Subject>;
   border: number;
+  proposedSemester: number;
+  spec: string;
 }
 
 type Prerequisite = {

@@ -59,3 +59,38 @@
 .status2{
     background-color: #75b86a;
 }
+
+#info{
+    position: relative;
+}
+
+.more_icon{
+    position:absolute;
+    right:2px;
+    top:-12px;
+    height:10px;
+}
+
+.infoText{
+    font-size: 0.7em;
+    margin-left: 5px;
+}
+
+.info-subject{
+    width:200px;
+}
+
+.infoText>span{
+    font-weight: bold;
+}
+
+.info-subject>button{
+    margin-left: 35%;
+    width: 30%;
+}
+
+.info-subject>button>span{
+    text-align: center;
+    width: 100%;
+}
+
