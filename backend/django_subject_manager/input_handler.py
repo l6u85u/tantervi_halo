@@ -32,13 +32,13 @@ def response_from_excel(relative_path,sheet_idx):
         start_row_chosen_spec,end_row_chosen_spec = read_excel_rows(file_path, sheet_idx, chosen_spec_name, end_row_core)
 
     resp = ""
-    resp1 = from_excel(file_path,start_row_core ,end_row_core-start_row_core,sheet_idx)
+    resp1 = from_excel(file_path,start_row_core ,end_row_core-start_row_core,sheet_idx,True)
     if (spec_name!=""):
-        resp2 = from_excel(file_path,start_row_spec,end_row_spec-start_row_spec,sheet_idx)
-        resp3 = from_excel(file_path,start_row_chosen_spec,end_row_chosen_spec-start_row_chosen_spec,sheet_idx)
+        resp2 = from_excel(file_path,start_row_spec,end_row_spec-start_row_spec,sheet_idx,True)
+        resp3 = from_excel(file_path,start_row_chosen_spec,end_row_chosen_spec-start_row_chosen_spec,sheet_idx,False)
         resp = "[" + resp1[:-1] + "," + resp2[1:] + "," + resp3 + "]"
     else:
-        resp3 = from_excel(file_path,start_row_chosen_spec,end_row_chosen_spec-start_row_chosen_spec,sheet_idx)
+        resp3 = from_excel(file_path,start_row_chosen_spec,end_row_chosen_spec-start_row_chosen_spec,sheet_idx,False)
         resp = "[" + resp1 + "," + resp3 + "]"
     json_list = json.loads(resp)
     prerequisit_handler(json_list[0])
@@ -78,14 +78,31 @@ def read_excel_rows(file_path, sheet_idx, start_cell, start_row_idx):
     return row_cont - 1, empty_row_index - 2
 
 
-def from_excel(file_path,start_row,number_of_rows,sheet_idx):
+def from_excel(file_path,start_row,number_of_rows,sheet_idx, obligatory):
     df = pd.read_excel(file_path, skiprows=start_row, nrows=number_of_rows, sheet_name=sheet_idx)
 
     # Convert DataFrame to JSON
     json_data = df.to_json(orient='records', force_ascii=False)
+    json_list = json.loads(json_data)
     #prerequisit_handler(json_data)
+    
+    if obligatory:
+        for data in json_list:
+            data["Típus"] = "Kötelező"
+    else:
+        for data in json_list:
+            data["Típus"] = "Kötelezően választható"
+    
+    if "angol" not in file_path:
+        for data in json_list:
+                if "inf" in data["Ismeretkör"].lower():
+                    data["Ismeretkör"] = "Informatika"
+                elif "szám" in data["Ismeretkör"].lower():
+                    data["Ismeretkör"] = "Számítástudomány"
+                elif "mat" in data["Ismeretkör"].lower():
+                    data["Ismeretkör"] = "Matematika"
 
-    return json_data
+    return json.dumps(json_list, ensure_ascii=False)
 
 def prerequisit_handler(json_data):
     for data in json_data:

@@ -1,16 +1,39 @@
 <header>
-  <div>
-
+  <div class="row">
+    <div class="col header-logo">
+      <img src="./assets/elte.png" alt="ELTE logo">
+    </div>
+    <div class="col header-icons">
+      <button>
+        <span *ngIf="!isDarkMode" class="material-symbols-outlined">
+          dark_mode
+        </span>
+        <span *ngIf="isDarkMode" class="material-symbols-outlined">
+          light_mode
+        </span>
+        <p>
+          {{darkMode()}}
+        </p>
+      </button>
+      <button>
+        <span class="material-symbols-outlined">
+          language
+        </span>
+        <p>
+          {{language}}
+        </p>
+      </button>
+    </div>
   </div>
 </header>
 
 <main>
-  <div class="modal fade" id="deleteSemesterModal" tabindex="-1" aria-labelledby="deleteSemesterModalLabel"
+  <div class="modal fade" id="deleteSubjectModal" tabindex="-1" aria-labelledby="deleteSubjectModalLabel"
     aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header">
-          <h1 class="modal-title fs-5" id="deleteSemesterModalLabel">{{modalTitle}}</h1>
+          <h1 class="modal-title fs-5" id="deleteSubjectModalLabel">{{modalTitle}}</h1>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
@@ -19,7 +42,7 @@
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{modalSecondButton}}</button>
           <button type="button" class="btn btn-primary" data-bs-dismiss="modal"
-            (click)="deleteSemester()">{{modalFirstButton}}</button>
+            (click)="deleteSubject()">{{modalFirstButton}}</button>
         </div>
       </div>
     </div>
@@ -81,40 +104,58 @@
                 <div *ngIf="specType=='not obligatory'">
                   <div class="mb-3">
                     <label for="code" class="form-label">Kód</label>
-                    <input type="text" class="form-control" id="code" placeholder="IP-18PROGEG" name="code" ngModel>
+                    <input type="text" class="form-control" id="code" placeholder="IP-18PROGEG" name="code"
+                      [(ngModel)]="chosenSpecForm.code">
+                    <p id="code-warning"> </p>
                   </div>
                   <div class="mb-3">
                     <label for="name" class="form-label">Név</label>
-                    <input type="text" class="form-control" id="name" placeholder="Programozás" name="name" ngModel>
+                    <input type="text" class="form-control" id="name" placeholder="Programozás" name="name"
+                      [(ngModel)]="chosenSpecForm.name">
+                    <p id="name-warning"> </p>
                   </div>
                   <div class="mb-3">
                     <label for="credit" class="form-label">Kredit</label>
-                    <input type="number" class="form-control" id="credit" placeholder="5" name="credit" ngModel>
+                    <input type="number" class="form-control" id="credit" placeholder="5" name="credit"
+                      [(ngModel)]="chosenSpecForm.credit">
                   </div>
                   <div class="mb-3">
                     <div class="subj_type">
-                      <label class="radio-inline"><input type="radio" name="type" checked value="EA" ngModel>EA</label>
-                      <label class="radio-inline"><input type="radio" name="type" value="GY" ngModel>GY</label>
-                      <label class="radio-inline"><input type="radio" name="type" value="" ngModel>EA+GY</label>
+                      <label class="radio-inline"><input type="radio" name="type" checked value="EA"
+                          [(ngModel)]="chosenSpecForm.type">EA</label>
+                      <label class="radio-inline"><input type="radio" name="type" value="GY"
+                          [(ngModel)]="chosenSpecForm.type">GY</label>
+                      <label class="radio-inline"><input type="radio" name="type" value=""
+                          [(ngModel)]="chosenSpecForm.type">EA+GY</label>
                     </div>
+                  </div>
+                  <div class="mb-3">
+                    <label for="semesterNumber" class="form-label">Félév</label>
+                    <select class="form-control" id="semesterNumber" name="semester"
+                      [(ngModel)]="chosenSpecForm.semester">
+                      <option *ngFor="let c of subjects[currentSpecIdx]; let i = index" value={{i}}>{{i+1}}</option>
+                    </select>
                   </div>
                 </div>
                 <div *ngIf="specType=='obligatory'">
                   <div class="mb-3">
-                  <label for="obligSpecSubject" class="form-label" >Név</label>
-                  <select class="form-control" id="obligSpecSubject" name="obligName" ngModel>
-                    <option *ngFor="let s of obligatorySpecSubjects[currentSpecIdx]; let i = index" value={{i}}>{{s.name}}  {{s.type}}</option>
-                  </select>
-                </div>
-                </div>
-                <div *ngIf="specType!==''">
+                    <label for="obligSpecSubject" class="form-label">Név</label>
+                    <select class="form-control" id="obligSpecSubject" name="obligName"
+                      [(ngModel)]="obligatorySpecForm.name">
+                      <option *ngFor="let s of obligatorySpecSubjects[currentSpecIdx]; let i = index" value={{i}}>
+                        {{s.name}} {{s.type}}</option>
+                    </select>
+                  </div>
                   <div class="mb-3">
                     <label for="semesterNumber" class="form-label">Félév</label>
-                    <select class="form-control" id="semesterNumber" name="semester" ngModel>
+                    <select class="form-control" id="semesterNumber" name="semester"
+                      [(ngModel)]="obligatorySpecForm.semester">
                       <option *ngFor="let c of subjects[currentSpecIdx]; let i = index" value={{i}}>{{i+1}}</option>
                     </select>
                   </div>
-                  <button type="submit" class="btn btn-primary">Felvesz</button>
+                </div>
+                <div *ngIf="specType!==''">
+                  <button [disabled]="!checkForm()" type="submit" class="btn btn-primary">Felvesz</button>
                 </div>
               </form>
             </div>
@@ -143,15 +184,15 @@
               </button>
               <ul class="dropdown-menu">
                 <li>
-                  <button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#deleteSemesterModal"
-                    (click)="setModalText(i,'delete semester')" type="button">Félév törlése</button>
+                  <button class="dropdown-item" (click)="deleteSemester(i)" type="button">Félév törlése</button>
                 </li>
               </ul>
             </div>
           </div>
-          <div class="subjects" cdkDropList (cdkDropListDropped)="drop($event)">
+          <div class="list-{{i}} subjects" cdkDropList (cdkDropListDropped)="drop($event,i)">
             <app-subject class="subject_comp" *ngFor="let s of subjects[currentSpecIdx][i]; let j = index"
-              [parentData]="s" (notifyMoreInfo)="showSubjectInfo($event,i)" (notifyStatusChange)="getSubjectCredit($event,i)" cdkDrag [cdkDragDisabled]="s.status!==0"
+              [parentData]="s" (notifyDeleteSubject)="showModal($event,i)"
+              (notifyStatusChange)="getSubjectCredit($event,i)" cdkDrag [cdkDragDisabled]="s.status!==0"
               click-stop-propagation>
             </app-subject>
           </div>
@@ -202,12 +243,43 @@
 
     </div>
 
+    <div class="action-buttons row">
+      <button class="col delete-forever-btn" (click)="resetSyllabus()">
+        <span class="material-symbols-outlined">
+          delete_forever
+        </span>
+        <p>
+          Törlés
+        </p>
+      </button>
+      <button class="col save-btn" (click)="saveSyllabusToFile()">
+        <span class="material-symbols-outlined">
+          save_as
+        </span>
+        <p>
+          Mentés
+        </p>
+      </button>
+      <button class="col load-btn" (click)="fileUpload.click()">
+        <span class="material-symbols-outlined">
+          reopen_window
+        </span>
+        <p>
+          Betöltés
+        </p>
+      </button>
+    </div>
+
   </div>
+
+  <input type="file" accept=".txt" class="file-input" (change)="openFile($event)" #fileUpload>
 
 </main>
 
 <footer>
   <div>
-
+    <div class="footer-info">
+      2024 | ELTE IK
+    </div>
   </div>
 </footer>

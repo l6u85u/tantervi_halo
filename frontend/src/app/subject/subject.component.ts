@@ -14,7 +14,7 @@ export class SubjectComponent {
 notifyStatusChange: EventEmitter<Subject> = new EventEmitter<Subject>();
 
 @Output()
-notifyMoreInfo: EventEmitter<Subject> = new EventEmitter<Subject>();
+notifyDeleteSubject: EventEmitter<Subject> = new EventEmitter<Subject>();
 
 constructor(){
 
@@ -26,7 +26,7 @@ statusChange(){
 }
 
 deleteSubject(){
-  this.notifyMoreInfo.emit(this.box)
+  this.notifyDeleteSubject.emit(this.box)
 }
 
 showPre(): string{
