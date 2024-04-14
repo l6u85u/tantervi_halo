@@ -12,15 +12,18 @@
           light_mode
         </span>
         <p>
-          {{darkMode()}}
+          {{getDarkModeText()}}
         </p>
       </button>
-      <button>
+      <button (click)="changeLanguage()">
         <span class="material-symbols-outlined">
           language
         </span>
-        <p>
-          {{language}}
+        <p *ngIf="isLanguageHu" lang="hu">
+          HU
+        </p>
+        <p *ngIf="!isLanguageHu" lang="en">
+          EN
         </p>
       </button>
     </div>
@@ -33,16 +36,16 @@
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header">
-          <h1 class="modal-title fs-5" id="deleteSubjectModalLabel">{{modalTitle}}</h1>
+          <h1 class="modal-title fs-5" id="deleteSubjectModalLabel">{{modalTitleText}}</h1>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          {{modalBody}}
+          {{modalBodyText}}
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{modalSecondButton}}</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{modalSecondButtonText}}</button>
           <button type="button" class="btn btn-primary" data-bs-dismiss="modal"
-            (click)="deleteSubject()">{{modalFirstButton}}</button>
+            (click)="deleteSubject()">{{modalFirstButtonText}}</button>
         </div>
       </div>
     </div>
@@ -50,19 +53,31 @@
 
   <div>
     <h1>
-      ELTE IK - Tantervi háló
+      <span *ngIf="isLanguageHu" lang="hu">
+        ELTE IK - Tantervi háló
+      </span>
+      <span *ngIf="!isLanguageHu" lang="en">
+        ELTE IK - Program Structure
+      </span>
     </h1>
     <div>
-      <h2>
+      <h2 *ngIf="isLanguageHu" lang="hu">
         Használati utasítás
       </h2>
-      <p>
+      <h2 *ngIf="!isLanguageHu" lang="en">
+        Instructions
+      </h2>
+      <p *ngIf="isLanguageHu" lang="hu">
         Az oldal célja, hogy a hallgatókat segítse a tárgyak egymásraépülésének interatkív ábrázolásával. Az oldalon
         lehetőség van a már teljesített tárgyak, a hallgató számára aktuálisan felvehető tárgyak és a függőségek
         megjelenítésére.
       </p>
+      <p *ngIf="!isLanguageHu" lang="en">
+        The purpose of the website is to assist students in visualizing the interdependency of subjects.
+        The site displays the completed subjects, currently available subjects to enroll in and their
+        dependencies.
+      </p>
     </div>
-
 
     <div>
       <div class="subject_header">
@@ -84,78 +99,179 @@
               <span class="material-symbols-outlined">
                 add_circle
               </span>
-              <p>
+              <p *ngIf="isLanguageHu" lang="hu">
                 Tárgy felv.
+              </p>
+              <p *ngIf="!isLanguageHu" lang="en">
+                Add subject
               </p>
             </button>
             <div class="dropdown-menu">
               <form #newSubjectForm="ngForm" (ngSubmit)="submitForm(newSubjectForm)" class="new_subject_form px-4 py-3">
                 <div class="mb-3">
                   <label for="spec" class="form-label">Típus</label>
-                  <select class="form-control" id="spec" name="spec" [(ngModel)]="specType">
+                  <select class="form-control" id="spec" name="spec" [(ngModel)]="subjectToAddSpecType">
                     <option value="obligatory">
-                      Kötelezően választható
+                      <span *ngIf="isLanguageHu" lang="hu">
+                        Kötelezően választható
+                      </span>
+                      <span *ngIf="!isLanguageHu" lang="en">
+                        Elective
+                      </span>
                     </option>
                     <option value="not obligatory">
-                      Szabadon választható
+                      <span *ngIf="isLanguageHu" lang="hu">
+                        Szabadon választható
+                      </span>
+                      <span *ngIf="!isLanguageHu" lang="en">
+                        Optional course
+                      </span>
                     </option>
                   </select>
                 </div>
-                <div *ngIf="specType=='not obligatory'">
+                <div *ngIf="subjectToAddSpecType=='not obligatory'">
                   <div class="mb-3">
-                    <label for="code" class="form-label">Kód</label>
+                    <label for="code" class="form-label">
+                      <span *ngIf="isLanguageHu" lang="hu">
+                        Kód
+                      </span>
+                      <span *ngIf="!isLanguageHu" lang="en">
+                        Code
+                      </span>
+                    </label>
                     <input type="text" class="form-control" id="code" placeholder="IP-18PROGEG" name="code"
-                      [(ngModel)]="chosenSpecForm.code">
+                      [(ngModel)]="optionalSubjectsForm.code">
                     <p id="code-warning"> </p>
                   </div>
                   <div class="mb-3">
-                    <label for="name" class="form-label">Név</label>
+                    <label for="name" class="form-label">
+                      <span *ngIf="isLanguageHu" lang="hu">
+                        Név
+                      </span>
+                      <span *ngIf="!isLanguageHu" lang="en">
+                        Name
+                      </span>
+                    </label>
                     <input type="text" class="form-control" id="name" placeholder="Programozás" name="name"
-                      [(ngModel)]="chosenSpecForm.name">
+                      [(ngModel)]="optionalSubjectsForm.name">
                     <p id="name-warning"> </p>
                   </div>
                   <div class="mb-3">
-                    <label for="credit" class="form-label">Kredit</label>
+                    <label for="credit" class="form-label">
+                      <span *ngIf="isLanguageHu" lang="hu">
+                        Kredit
+                      </span>
+                      <span *ngIf="!isLanguageHu" lang="en">
+                        Credit
+                      </span>
+                    </label>
                     <input type="number" class="form-control" id="credit" placeholder="5" name="credit"
-                      [(ngModel)]="chosenSpecForm.credit">
+                      [(ngModel)]="optionalSubjectsForm.credit">
                   </div>
                   <div class="mb-3">
                     <div class="subj_type">
-                      <label class="radio-inline"><input type="radio" name="type" checked value="EA"
-                          [(ngModel)]="chosenSpecForm.type">EA</label>
-                      <label class="radio-inline"><input type="radio" name="type" value="GY"
-                          [(ngModel)]="chosenSpecForm.type">GY</label>
+                      <label *ngIf="!(specLinks[currentSpecIdx]=='angol')" lang="hu" class="radio-inline"><input type="radio" name="type" checked
+                          value="EA" [(ngModel)]="optionalSubjectsForm.type">
+                        <span *ngIf="isLanguageHu" lang="hu">
+                          EA
+                        </span>
+                        <span *ngIf="!isLanguageHu" lang="en">
+                          L
+                        </span>
+                      </label>
+                      <label *ngIf="specLinks[currentSpecIdx]=='angol'" lang="en" class="radio-inline"><input type="radio" name="type"
+                          checked value="L" [(ngModel)]="optionalSubjectsForm.type">
+                        <span *ngIf="isLanguageHu" lang="hu">
+                          EA
+                        </span>
+                        <span *ngIf="!isLanguageHu" lang="en">
+                          L
+                        </span>
+                      </label>
+                      <label *ngIf="!(specLinks[currentSpecIdx]=='angol')" lang="hu" class="radio-inline"><input type="radio" name="type"
+                          value="GY" [(ngModel)]="optionalSubjectsForm.type">
+                        <span *ngIf="isLanguageHu" lang="hu">
+                          GY
+                        </span>
+                        <span *ngIf="!isLanguageHu" lang="en">
+                          P
+                        </span>
+                      </label>
+                      <label *ngIf="specLinks[currentSpecIdx]=='angol'" lang="en" class="radio-inline"><input type="radio" name="type"
+                          value="P" [(ngModel)]="optionalSubjectsForm.type">
+                        <span *ngIf="isLanguageHu" lang="hu">
+                          GY
+                        </span>
+                        <span *ngIf="!isLanguageHu" lang="en">
+                          P
+                        </span>
+                      </label>
                       <label class="radio-inline"><input type="radio" name="type" value=""
-                          [(ngModel)]="chosenSpecForm.type">EA+GY</label>
+                          [(ngModel)]="optionalSubjectsForm.type">
+                        <span *ngIf="isLanguageHu" lang="hu">
+                          EA+GY
+                        </span>
+                        <span *ngIf="!isLanguageHu" lang="en">
+                          L+P
+                        </span>
+                      </label>
                     </div>
                   </div>
                   <div class="mb-3">
-                    <label for="semesterNumber" class="form-label">Félév</label>
+                    <label for="semesterNumber" class="form-label">
+                      <span *ngIf="isLanguageHu" lang="hu">
+                        Félév
+                      </span>
+                      <span *ngIf="!isLanguageHu" lang="en">
+                        Semester
+                      </span>
+                    </label>
                     <select class="form-control" id="semesterNumber" name="semester"
-                      [(ngModel)]="chosenSpecForm.semester">
+                      [(ngModel)]="optionalSubjectsForm.semester">
                       <option *ngFor="let c of subjects[currentSpecIdx]; let i = index" value={{i}}>{{i+1}}</option>
                     </select>
                   </div>
                 </div>
-                <div *ngIf="specType=='obligatory'">
+                <div *ngIf="subjectToAddSpecType=='obligatory'">
                   <div class="mb-3">
-                    <label for="obligSpecSubject" class="form-label">Név</label>
+                    <label for="obligSpecSubject" class="form-label">
+                      <span *ngIf="isLanguageHu" lang="hu">
+                        Név
+                      </span>
+                      <span *ngIf="!isLanguageHu" lang="en">
+                        Name
+                      </span>
+                    </label>
                     <select class="form-control" id="obligSpecSubject" name="obligName"
-                      [(ngModel)]="obligatorySpecForm.name">
-                      <option *ngFor="let s of obligatorySpecSubjects[currentSpecIdx]; let i = index" value={{i}}>
+                      [(ngModel)]="electiveSubjectsForm.name">
+                      <option *ngFor="let s of electiveSubjects[currentSpecIdx]; let i = index" value={{i}}>
                         {{s.name}} {{s.type}}</option>
                     </select>
                   </div>
                   <div class="mb-3">
-                    <label for="semesterNumber" class="form-label">Félév</label>
+                    <label for="semesterNumber" class="form-label">
+                      <span *ngIf="isLanguageHu" lang="hu">
+                        Félév
+                      </span>
+                      <span *ngIf="!isLanguageHu" lang="en">
+                        Semester
+                      </span>
+                    </label>
                     <select class="form-control" id="semesterNumber" name="semester"
-                      [(ngModel)]="obligatorySpecForm.semester">
+                      [(ngModel)]="electiveSubjectsForm.semester">
                       <option *ngFor="let c of subjects[currentSpecIdx]; let i = index" value={{i}}>{{i+1}}</option>
                     </select>
                   </div>
                 </div>
-                <div *ngIf="specType!==''">
-                  <button [disabled]="!checkForm()" type="submit" class="btn btn-primary">Felvesz</button>
+                <div *ngIf="subjectToAddSpecType!==''">
+                  <button [disabled]="!checkForm()" type="submit" class="btn btn-primary">
+                    <span *ngIf="isLanguageHu" lang="hu">
+                      Felvesz
+                    </span>
+                    <span *ngIf="!isLanguageHu" lang="en">
+                      Add
+                    </span>
+                  </button>
                 </div>
               </form>
             </div>
@@ -164,8 +280,11 @@
             <span class="material-symbols-outlined">
               add_box
             </span>
-            <p>
+            <p *ngIf="isLanguageHu" lang="hu">
               Félév felv.
+            </p>
+            <p *ngIf="!isLanguageHu" lang="en">
+              Add semester
             </p>
           </button>
         </div>
@@ -173,32 +292,46 @@
       </div>
     </div>
 
-    <div class="subject_main container" (click)="changeBorderCode('')">
+    <div class="subject_main container" (click)="updateCurrentSubjectCode('')">
       <div class="row flex-nowrap overflow-auto" cdkDropListGroup>
 
         <div class="col" *ngFor="let c of subjects[currentSpecIdx]; let i = index">
           <div class="semester">
             <div class="btn-group dropend">
               <button class="btn btn-secondary" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                {{i+1}}. félév
+                <span *ngIf="isLanguageHu" lang="hu">
+                  {{i+1}}. félév
+                </span>
+                <span *ngIf="!isLanguageHu" lang="en">
+                  {{i+1}}. semester
+                </span>
               </button>
               <ul class="dropdown-menu">
                 <li>
-                  <button class="dropdown-item" (click)="deleteSemester(i)" type="button">Félév törlése</button>
+                  <button class="dropdown-item" (click)="deleteSemester(i)" type="button">
+                    <span *ngIf="isLanguageHu" lang="hu">
+                      Félév törlése
+                    </span>
+                    <span *ngIf="!isLanguageHu" lang="en">
+                      Delete semester
+                    </span>
+                  </button>
                 </li>
               </ul>
             </div>
           </div>
           <div class="list-{{i}} subjects" cdkDropList (cdkDropListDropped)="drop($event,i)">
             <app-subject class="subject_comp" *ngFor="let s of subjects[currentSpecIdx][i]; let j = index"
-              [parentData]="s" (notifyDeleteSubject)="showModal($event,i)"
-              (notifyStatusChange)="getSubjectCredit($event,i)" cdkDrag [cdkDragDisabled]="s.status!==0"
+              [parentData]="s" [languageData]="isLanguageHu" (notifyDeleteSubject)="showDeleteSubjectModal($event,i)"
+              (notifyStatusChange)="changeSubjectStatus($event,i)" cdkDrag [cdkDragDisabled]="s.status!==0"
               click-stop-propagation>
             </app-subject>
           </div>
           <div class="credits">
-            <p>Felvett: {{creditSemester[i]}}</p>
-            <p>Teljesített: {{completedCreditSemester[i]}}</p>
+            <p *ngIf="isLanguageHu" lang="hu">Felvett: {{enrolledCreditsSemester[i]}}</p>
+            <p *ngIf="!isLanguageHu" lang="en">Enrolled: {{enrolledCreditsSemester[i]}}</p>
+            <p *ngIf="isLanguageHu" lang="hu">Teljesített: {{completedCreditsSemester[i]}}</p>
+            <p *ngIf="!isLanguageHu" lang="en">Completed: {{completedCreditsSemester[i]}}</p>
           </div>
 
         </div>
@@ -211,30 +344,62 @@
       <div class="row">
         <div class="col progress_col">
           <div class="progress_bar">
-            <div class="progress" [style.width]="completedCreditPerc">
+            <div class="progress-completed" [style.width]="completedCreditsPerc">
+            </div>
+            <div class="progress-enrolled" [style.width]="enrolledCreditsPerc">
             </div>
           </div>
           <div class="progress_in_numbers">
-            {{completedCredit}}/180 kredit
+            <span *ngIf="isLanguageHu" lang="hu">
+              {{completedCredits}}/180 kredit
+            </span>
+            <span *ngIf="!isLanguageHu" lang="en">
+              {{completedCredits}}/180 credits
+            </span>
           </div>
         </div>
 
         <div class="col-1 color_desc">
           <ul>
             <li id="completed">
-              Teljesített
+              <span *ngIf="isLanguageHu" lang="hu">
+                Teljesített
+              </span>
+              <span *ngIf="!isLanguageHu" lang="en">
+                Completed
+              </span>
             </li>
             <li id="inprogress">
-              Felvett
+              <span *ngIf="isLanguageHu" lang="hu">
+                Felvett
+              </span>
+              <span *ngIf="!isLanguageHu" lang="en">
+                Enrolled
+              </span>
             </li>
             <li id="normal">
-              Nem felvett
+              <span *ngIf="isLanguageHu" lang="hu">
+                Nem felvett
+              </span>
+              <span *ngIf="!isLanguageHu" lang="en">
+                Not enrolled
+              </span>
             </li>
             <li id="prerequisite">
-              Közv. előkövetelmény
+              <span *ngIf="isLanguageHu" lang="hu">
+                Közv. előkövetelmény
+              </span>
+              <span *ngIf="!isLanguageHu" lang="en">
+                Prerequisite
+              </span>
             </li>
             <li id="overlay">
-              Ráépülő
+              <span *ngIf="isLanguageHu" lang="hu">
+                Ráépülő
+              </span>
+              <span *ngIf="!isLanguageHu" lang="en">
+                Overlay
+              </span>
             </li>
           </ul>
 
@@ -248,24 +413,33 @@
         <span class="material-symbols-outlined">
           delete_forever
         </span>
-        <p>
+        <p *ngIf="isLanguageHu" lang="hu">
           Törlés
+        </p>
+        <p *ngIf="!isLanguageHu" lang="en">
+          Reset
         </p>
       </button>
       <button class="col save-btn" (click)="saveSyllabusToFile()">
         <span class="material-symbols-outlined">
           save_as
         </span>
-        <p>
+        <p *ngIf="isLanguageHu" lang="hu">
           Mentés
+        </p>
+        <p *ngIf="!isLanguageHu" lang="en">
+          Save
         </p>
       </button>
       <button class="col load-btn" (click)="fileUpload.click()">
         <span class="material-symbols-outlined">
           reopen_window
         </span>
-        <p>
+        <p *ngIf="isLanguageHu" lang="hu">
           Betöltés
+        </p>
+        <p *ngIf="!isLanguageHu" lang="en">
+          Load
         </p>
       </button>
     </div>

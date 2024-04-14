@@ -20,19 +20,31 @@
         <div click-stop-propagation class="dropdown-menu info-subject">
             <div>
                 <p class="infoText"> 
-                    <span>Név:</span> {{box.name}} {{box.type}}
+                    <span *ngIf="languageIsHu" lang="hu">Név:</span> 
+                    <span *ngIf="!languageIsHu" lang="en">Name:</span>
+                    {{box.name}} {{box.type}}
                     <br>
-                    <span>Kód:</span> {{box.code}}
+                    <span *ngIf="languageIsHu" lang="hu">Kód:</span> 
+                    <span *ngIf="!languageIsHu" lang="en">Code:</span> 
+                    {{box.code}}
                     <br>
-                    <span>Kredit:</span> {{box.credit}}
+                    <span *ngIf="languageIsHu" lang="hu">Kredit:</span> 
+                    <span *ngIf="!languageIsHu" lang="en">Credit:</span> 
+                    {{box.credit}}
                     <br>
-                    <span>Ajánlott félév:</span> {{box.proposedSemester}}
+                    <span *ngIf="languageIsHu" lang="hu">Ajánlott félév:</span> 
+                    <span *ngIf="!languageIsHu" lang="en">Proposed semester:</span> 
+                    {{box.proposedSemester}}
                     <br>
-                    <span>Előköv:</span> {{showPre()}}
+                    <span *ngIf="languageIsHu" lang="hu">Előköv.:</span> 
+                    <span *ngIf="!languageIsHu" lang="en">Prereq.:</span> 
+                    {{showPre()}}
                     <br>
-                    <span>Típus:</span> {{box.spec}}
+                    <span *ngIf="languageIsHu" lang="hu">Típus:</span> 
+                    <span *ngIf="!languageIsHu" lang="en">Type:</span> 
+                    {{getSpec()}}
                     <br>
-                    <span>Ismeretkör:</span> {{box.ken}}
+                    <span *ngIf="languageIsHu" lang="hu">Ismeretkör: <span style="font-weight:normal"> {{box.ken}} </span></span> 
                 </p>
             </div>
             <button class="dropdown-item" [disabled]="box.spec=='Kötelező'" data-bs-toggle="modal" data-bs-target="#deleteSubjectModal"

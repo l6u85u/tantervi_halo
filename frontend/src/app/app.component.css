@@ -73,9 +73,18 @@ h2 {
     margin-bottom: 0;
 }
 
-.progress {
+.progress-completed {
+    position:absolute;
     height: 15px;
     background-color: #75b86a;
+    z-index: 2;
+}
+
+.progress-enrolled {
+    position:absolute;
+    height: 15px;
+    background-color: #667de3;
+    z-index: 1;
 }
 
 .progress_bar {
@@ -85,6 +94,7 @@ h2 {
     background-color: #EDECEC;
     border-radius: 25px;
     overflow: hidden;
+    position: relative;
 }
 
 .progress_col {
