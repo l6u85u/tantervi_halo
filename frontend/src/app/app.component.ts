@@ -143,6 +143,10 @@ export class AppComponent {
     return this._subjectToAddSpecType
   }
 
+  public set subjectToAddSpecType(value: string){
+    this._subjectToAddSpecType = value
+  }
+
   public get electiveSubjectsForm(): Form {
     return this._electiveSubjectsForm
   }
@@ -993,7 +997,7 @@ export class AppComponent {
 
   //change the subject types to string to create JSON from it
   private changePrerequisitesAndOverlaysToString(key: any, value: any): any {
-    if (key === "pre") {
+    if (key === "_pre") {
       var subjects = value
       value = []
       for (let i = 0; i < subjects.length; i++) {
@@ -1002,7 +1006,7 @@ export class AppComponent {
         value.push(pre)
       }
     }
-    else if (key === "over") {
+    else if (key === "_over") {
       var subjects = value
       value = []
       for (let i = 0; i < subjects.length; i++) {
