@@ -87,8 +87,8 @@
             {{currentSpecName}}
           </button>
           <ul class="dropdown-menu">
-            <li *ngFor="let s of specNames; let i = index">
-              <button (click)="changeSpec(i)" class="dropdown-item" type="button">{{specNames[i]}}</button>
+            <li *ngFor="let c of curriculums; let i = index">
+              <button (click)="changeSpec(i)" class="dropdown-item" type="button">{{c.specName}}</button>
             </li>
           </ul>
         </div>
@@ -170,7 +170,7 @@
                   </div>
                   <div class="mb-3">
                     <div class="subj_type">
-                      <label *ngIf="!(specLinks[currentSpecIdx]=='angol')" lang="hu" class="radio-inline"><input type="radio" name="type" checked
+                      <label *ngIf="!(curriculums[currentSpecIdx].specLink=='angol')" lang="hu" class="radio-inline"><input type="radio" name="type" checked
                           value="EA" [(ngModel)]="optionalSubjectsForm.type">
                         <span *ngIf="isLanguageHu" lang="hu">
                           EA
@@ -179,7 +179,7 @@
                           L
                         </span>
                       </label>
-                      <label *ngIf="specLinks[currentSpecIdx]=='angol'" lang="en" class="radio-inline"><input type="radio" name="type"
+                      <label *ngIf="curriculums[currentSpecIdx].specLink=='angol'" lang="en" class="radio-inline"><input type="radio" name="type"
                           checked value="L" [(ngModel)]="optionalSubjectsForm.type">
                         <span *ngIf="isLanguageHu" lang="hu">
                           EA
@@ -188,7 +188,7 @@
                           L
                         </span>
                       </label>
-                      <label *ngIf="!(specLinks[currentSpecIdx]=='angol')" lang="hu" class="radio-inline"><input type="radio" name="type"
+                      <label *ngIf="!(curriculums[currentSpecIdx].specLink=='angol')" lang="hu" class="radio-inline"><input type="radio" name="type"
                           value="GY" [(ngModel)]="optionalSubjectsForm.type">
                         <span *ngIf="isLanguageHu" lang="hu">
                           GY
@@ -197,7 +197,7 @@
                           P
                         </span>
                       </label>
-                      <label *ngIf="specLinks[currentSpecIdx]=='angol'" lang="en" class="radio-inline"><input type="radio" name="type"
+                      <label *ngIf="curriculums[currentSpecIdx].specLink=='angol'" lang="en" class="radio-inline"><input type="radio" name="type"
                           value="P" [(ngModel)]="optionalSubjectsForm.type">
                         <span *ngIf="isLanguageHu" lang="hu">
                           GY
@@ -228,7 +228,7 @@
                     </label>
                     <select class="form-control" id="semesterNumber" name="semester"
                       [(ngModel)]="optionalSubjectsForm.semester">
-                      <option *ngFor="let c of subjects[currentSpecIdx]; let i = index" value={{i}}>{{i+1}}</option>
+                      <option *ngFor="let c of curriculums[currentSpecIdx].semesters; let i = index" value={{i}}>{{i+1}}</option>
                     </select>
                   </div>
                 </div>
@@ -244,7 +244,7 @@
                     </label>
                     <select class="form-control" id="obligSpecSubject" name="obligName"
                       [(ngModel)]="electiveSubjectsForm.name">
-                      <option *ngFor="let s of electiveSubjects[currentSpecIdx]; let i = index" value={{i}}>
+                      <option *ngFor="let s of curriculums[currentSpecIdx].electiveSubjects; let i = index" value={{i}}>
                         {{s.name}} {{s.type}}</option>
                     </select>
                   </div>
@@ -259,7 +259,7 @@
                     </label>
                     <select class="form-control" id="semesterNumber" name="semester"
                       [(ngModel)]="electiveSubjectsForm.semester">
-                      <option *ngFor="let c of subjects[currentSpecIdx]; let i = index" value={{i}}>{{i+1}}</option>
+                      <option *ngFor="let c of curriculums[currentSpecIdx].semesters; let i = index" value={{i}}>{{i+1}}</option>
                     </select>
                   </div>
                 </div>
@@ -292,10 +292,10 @@
       </div>
     </div>
 
-    <div class="subject_main container" (click)="updateCurrentSubjectCode('')">
+    <div class="subject_main container" (click)="curriculums[currentSpecIdx].updateCurrentSubjectCode('')">
       <div class="row flex-nowrap overflow-auto" cdkDropListGroup>
 
-        <div class="col" *ngFor="let c of subjects[currentSpecIdx]; let i = index">
+        <div class="col" *ngFor="let c of curriculums[currentSpecIdx].semesters; let i = index">
           <div class="semester">
             <div class="btn-group dropend">
               <button class="btn btn-secondary" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -321,17 +321,17 @@
             </div>
           </div>
           <div class="list-{{i}} subjects" cdkDropList (cdkDropListDropped)="drop($event,i)">
-            <app-subject class="subject_comp" *ngFor="let s of subjects[currentSpecIdx][i]; let j = index"
+            <app-subject class="subject_comp" *ngFor="let s of curriculums[currentSpecIdx].semesters[i].subjects; let j = index"
               [parentData]="s" [languageData]="isLanguageHu" (notifyDeleteSubject)="showDeleteSubjectModal($event,i)"
-              (notifyStatusChange)="changeSubjectStatus($event,i)" cdkDrag [cdkDragDisabled]="s.status!==0"
+              (notifyStatusChange)="clickEventHandler($event,i)" cdkDrag [cdkDragDisabled]="s.status!==0"
               click-stop-propagation>
             </app-subject>
           </div>
           <div class="credits">
-            <p *ngIf="isLanguageHu" lang="hu">Felvett: {{enrolledCreditsSemester[i]}}</p>
-            <p *ngIf="!isLanguageHu" lang="en">Enrolled: {{enrolledCreditsSemester[i]}}</p>
-            <p *ngIf="isLanguageHu" lang="hu">Teljesített: {{completedCreditsSemester[i]}}</p>
-            <p *ngIf="!isLanguageHu" lang="en">Completed: {{completedCreditsSemester[i]}}</p>
+            <p *ngIf="isLanguageHu" lang="hu">Felvett: {{curriculums[currentSpecIdx].semesters[i].enrolledCredits}}</p>
+            <p *ngIf="!isLanguageHu" lang="en">Enrolled: {{curriculums[currentSpecIdx].semesters[i].enrolledCredits}}</p>
+            <p *ngIf="isLanguageHu" lang="hu">Teljesített: {{curriculums[currentSpecIdx].semesters[i].completedCredits}}</p>
+            <p *ngIf="!isLanguageHu" lang="en">Completed: {{curriculums[currentSpecIdx].semesters[i].completedCredits}}</p>
           </div>
 
         </div>
@@ -344,17 +344,17 @@
       <div class="row">
         <div class="col progress_col">
           <div class="progress_bar">
-            <div class="progress-completed" [style.width]="completedCreditsPerc">
+            <div class="progress-completed" [style.width]="curriculums[currentSpecIdx].completedCreditsPerc">
             </div>
-            <div class="progress-enrolled" [style.width]="enrolledCreditsPerc">
+            <div class="progress-enrolled" [style.width]="curriculums[currentSpecIdx].enrolledCreditsPerc">
             </div>
           </div>
           <div class="progress_in_numbers">
             <span *ngIf="isLanguageHu" lang="hu">
-              {{completedCredits}}/180 kredit
+              {{curriculums[currentSpecIdx].completedCredits}}/180 kredit
             </span>
             <span *ngIf="!isLanguageHu" lang="en">
-              {{completedCredits}}/180 credits
+              {{curriculums[currentSpecIdx].completedCredits}}/180 credits
             </span>
           </div>
         </div>
@@ -409,7 +409,7 @@
     </div>
 
     <div class="action-buttons row">
-      <button class="col delete-forever-btn" (click)="resetSyllabus()">
+      <button class="col delete-forever-btn" (click)="resetCurriculum()">
         <span class="material-symbols-outlined">
           delete_forever
         </span>
@@ -420,7 +420,7 @@
           Reset
         </p>
       </button>
-      <button class="col save-btn" (click)="saveSyllabusToFile()">
+      <button class="col save-btn" (click)="saveCurriculumToFile()">
         <span class="material-symbols-outlined">
           save_as
         </span>

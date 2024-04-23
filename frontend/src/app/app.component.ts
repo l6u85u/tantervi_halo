@@ -35,24 +35,9 @@ export class AppComponent {
   private _subjectToDelete!: Subject;
   private _subjectToDeleteSemester: number = -1;
 
-  private _completedCredits: number = 0;
-  private _enrolledCredits: number = 0;
-  private _completedCreditsPerc: string = "0%";
-  private _enrolledCreditsPerc: string = "0%";
-  private _completedCreditsSemester: Array<number> = [];
-  private _enrolledCreditsSemester: Array<number> = [];
-
-  private _subjects: Array<Array<Array<Subject>>> = [];
-  private _electiveSubjects: Array<Array<Subject>> = [];
-
-  private _xhttpForSpec: Array<XMLHttpRequest> = [];
-
-  private _currentSubjectCode: string = "";
+  private _curriculums: Array<Curriculum> = [];
   private _currentSpecName: string;
   private _currentSpecIdx: number;
-
-  private _specNames: Array<string> = SPEC_NAMES
-  private _specLinks: Array<string> = SPEC_LINKS
 
   private _subjectToAddSpecType: string = "obligatory"
   private _electiveSubjectsForm: Form = { code: "", name: "", type: "", semester: -1, credit: 0 }
@@ -87,40 +72,8 @@ export class AppComponent {
     return this._isLanguageHu
   }
 
-  public get completedCredits(): number {
-    return this._completedCredits
-  }
-
-  public get enrolledCredits(): number {
-    return this._enrolledCredits
-  }
-
-  public get completedCreditsPerc(): string {
-    return this._completedCreditsPerc
-  }
-
-  public get enrolledCreditsPerc(): string {
-    return this._enrolledCreditsPerc
-  }
-
-  public get enrolledCreditsSemester(): Array<number> {
-    return this._enrolledCreditsSemester
-  }
-
-  public get completedCreditsSemester(): Array<number> {
-    return this._completedCreditsSemester
-  }
-
-  public get subjects(): Array<Array<Array<Subject>>> {
-    return this._subjects
-  }
-
-  public get electiveSubjects(): Array<Array<Subject>> {
-    return this._electiveSubjects
-  }
-
-  public get currentSubjectCode(): string {
-    return this._currentSubjectCode
+  public get curriculums(): Array<Curriculum> {
+    return this._curriculums
   }
 
   public get currentSpecName(): string {
@@ -131,19 +84,11 @@ export class AppComponent {
     return this._currentSpecIdx
   }
 
-  public get specNames(): Array<string> {
-    return this._specNames
-  }
-
-  public get specLinks(): Array<string> {
-    return this._specLinks
-  }
-
   public get subjectToAddSpecType(): string {
     return this._subjectToAddSpecType
   }
 
-  public set subjectToAddSpecType(value: string){
+  public set subjectToAddSpecType(value: string) {
     this._subjectToAddSpecType = value
   }
 
@@ -165,28 +110,14 @@ export class AppComponent {
 
   constructor() {
 
-    for (let i = 0; i < this._specLinks.length; i++) {
-      var xhttp = new XMLHttpRequest();
-      this._xhttpForSpec.push(xhttp)
-    }
-
-    //get the data from the backend with XMLHttpRequest
-    for (let i = 0; i < this._specLinks.length; i++) {
-      this.electiveSubjects.push([])
-      this.subjects.push([])
-      this._xhttpForSpec[i].open('GET', BACKEND_ADDRESS + ":" + BACKEND_PORT + "/" + this._specLinks[i], true)
-      this._xhttpForSpec[i].onreadystatechange = () => this.getDataFromSpec(this._xhttpForSpec[i], this.subjects[i], this.electiveSubjects[i], this._specLinks[i] == "angol");
-      this._xhttpForSpec[i].send();
-    }
-
-    //initialize enrolled and completed credits in a semester
-    for (let i = 0; i < NUMBER_OF_COLUMNS; i++) {
-      this._enrolledCreditsSemester[i] = 0;
-      this._completedCreditsSemester[i] = 0;
+    //initialize the curriculums
+    for (let i = 0; i < SPEC_LINKS.length; i++) {
+      var curriculum = new Curriculum(SPEC_NAMES[i], SPEC_LINKS[i])
+      this._curriculums.push(curriculum)
     }
 
     //set the current spec to the first one
-    this._currentSpecName = this._specNames[0]
+    this._currentSpecName = SPEC_NAMES[0]
     this._currentSpecIdx = 0;
 
   }
@@ -207,59 +138,22 @@ export class AppComponent {
   }
 
   //handles the click event for a subject
-  public changeSubjectStatus(subj: Subject, idx: number): void {
-    var enrolled;
-    var completed;
+  public clickEventHandler(subj: Subject, idx: number): void {
 
-    this.updateCurrentSubjectCode(subj.code)
+    //the list of prerequisites which are not completed
+    var pre = this.curriculums[this._currentSpecIdx].changeSubjectStatus(subj, idx)
 
-    subj.border = 1
+    if (pre.length > 0) {
+      var resp: string
 
-    if (subj.status == 0) {  //not enrolled status
-      this.showPrerequisites(subj)
-      if (!this.checkPrerequisites(subj)) {
-        return
-      }
-      enrolled = subj.credit
-      completed = 0
-    }
-    else if (subj.status == 1) { //enrolled status
-      enrolled = 0
-      completed = subj.credit
-      this.hidePrerequisites(subj)
-      this.showOverlays(subj)
-    }
-    else { //completed status
-      enrolled = completed = -1 * subj.credit
-      this.resetOverlays(subj)
-      this.hideOverlays(subj)
+      if (this._isLanguageHu) { resp = "A következő előfeltételek nem teljesültek:\n" }
+      else { resp = "The following prerequisites are not completed:\n" }
+
+      pre.forEach(e => { resp += e + "\n" })
+
+      swal(resp);
     }
 
-    subj.status = (subj.status + 1) % 3 //update status
-    this.updateSubjectCredits([enrolled, completed], idx) //update credits
-  }
-
-  //updates the subject which is currently chosen
-  public updateCurrentSubjectCode(newValue: string) {
-
-    //if a subject was previously chosen and it is active
-    if (this._currentSubjectCode != "") {
-      for (let i = 0; i < this.subjects[this._currentSpecIdx].length; i++)
-        for (let j = 0; j < this.subjects[this._currentSpecIdx][i].length; j++) {
-          if (this.subjects[this._currentSpecIdx][i][j].code == this._currentSubjectCode) {
-            this.subjects[this._currentSpecIdx][i][j].border = 0 //remove the mark
-            if (this.subjects[this._currentSpecIdx][i][j].status != 2) {
-              this.hidePrerequisites(this.subjects[this._currentSpecIdx][i][j])
-            }
-            else if (this.subjects[this._currentSpecIdx][i][j].status == 2) {
-              this.hideOverlays(this.subjects[this._currentSpecIdx][i][j])
-            }
-            break;
-          }
-        }
-    }
-
-    this._currentSubjectCode = newValue //update the active subject with the new value
   }
 
   //handles the drop event of a subject
@@ -267,7 +161,7 @@ export class AppComponent {
 
     //if the subject was dropped in the same semester as before
     if (event.previousContainer === event.container) {
-      this.moveItemInArray(index, event.previousIndex, event.currentIndex);
+      this.curriculums[this.currentSpecIdx].moveItemInArray(index, index, event.previousIndex, event.currentIndex);
     }
     else {
       var prevColumn = parseInt(event.previousContainer.element.nativeElement.classList[1].split("-")[1])
@@ -277,34 +171,31 @@ export class AppComponent {
 
   //change the specialization 
   public changeSpec(index: number) {
+    this.curriculums[this._currentSpecIdx].updateCurrentSubjectCode("")
     this._currentSpecIdx = index;
-    this._currentSpecName = this._specNames[index]
-    this.updateCredits(index)
-    this.updateCurrentSubjectCode("")
+    this._currentSpecName = SPEC_NAMES[index]
+    this.curriculums[index].updateCredits()
   }
 
   //adds a new semester
   public addSemester() {
-    if (this.subjects[this._currentSpecIdx].length >= MAX_COLUMN_NUMBERS) {
+    if (this.curriculums[this._currentSpecIdx].semesters.length >= MAX_COLUMN_NUMBERS) {
       if (this._isLanguageHu) {
         swal("Elérted a maximális félévszámot, többet nem tudsz felvenni.")
       }
       else {
         swal("You reached the maximum number of semesters, you can not add more.")
       }
-
     }
     else {
-      this.subjects[this._currentSpecIdx].push([])
-      this._enrolledCreditsSemester.push(0)
-      this._completedCreditsSemester.push(0);
+      this.curriculums[this._currentSpecIdx].addNewSemester()
     }
   }
 
   //deletes the semester with the index
   public deleteSemester(index: number) {
     //if the semester is not empty do not delete it
-    if (this.subjects[this._currentSpecIdx][index].length != 0) {
+    if (this.curriculums[this._currentSpecIdx].semesters[index].subjects.length != 0) {
       if (this._isLanguageHu) {
         swal("Csak üres félévet tudsz törölni.")
       }
@@ -313,9 +204,7 @@ export class AppComponent {
       }
     }
     else {
-      this.subjects[this._currentSpecIdx].splice(index, 1)
-      this._enrolledCreditsSemester.splice(index, 1)
-      this._completedCreditsSemester.splice(index, 1)
+      this.curriculums[this._currentSpecIdx].deleteSemester(index)
     }
   }
 
@@ -330,7 +219,7 @@ export class AppComponent {
         this._optionalSubjectsFormMessage = ""
       }
       else {
-        if (this.subjectIsAlreadyIn(resp.code)) {
+        if (this.curriculums[this.currentSpecIdx].subjectIsAlreadyIn(resp.code)) {
           if (this._isLanguageHu) {
             swal({ text: "Ez a tárgy már szerepel a tantervben!", dangerMode: true })
           }
@@ -340,7 +229,8 @@ export class AppComponent {
           return
         }
         var subj: Subject = new Subject(resp.code, resp.name, resp.credit, resp.type, 0, [], [], 0, 0, "Szabadon választható", "Egyéb")
-        this.subjects[this._currentSpecIdx][resp.semester].push(subj)
+        this.curriculums[this._currentSpecIdx].semesters[resp.semester].addNewSubject(subj)
+        
         this._optionalSubjectsForm.name = ""
         this._optionalSubjectsForm.code = ""
         this._optionalSubjectsForm.credit = 0
@@ -350,9 +240,9 @@ export class AppComponent {
     }
     else if (this._subjectToAddSpecType == "obligatory") { //if the new subject is elective
       var idx = resp.obligName
-      var subj = this.electiveSubjects[this._currentSpecIdx][idx]
+      var subj = this.curriculums[this._currentSpecIdx].electiveSubjects[idx]
 
-      if (this.subjectIsAlreadyIn(subj.code)) {
+      if (this.curriculums[this._currentSpecIdx].subjectIsAlreadyIn(subj.code)) {
         if (this._isLanguageHu) {
           swal({ text: "Ez a tárgy már szerepel a tantervben!", dangerMode: true })
         }
@@ -362,7 +252,7 @@ export class AppComponent {
         return
       }
 
-      if (this.prerequisiteIsFurther(subj, parseInt(resp.semester))) { //check if can be added
+      if (this.curriculums[this.currentSpecIdx].prerequisiteIsFurther(subj, parseInt(resp.semester))) { //check if can be added
         if (this._isLanguageHu) {
           swal("Nem veheted fel a tárgyat a kiválasztott félévbe, mivel az előkövetelmények nem teljesülnek.")
         }
@@ -371,8 +261,8 @@ export class AppComponent {
         }
         return
       }
-      this.connectPrerequisites(subj)
-      this.subjects[this._currentSpecIdx][resp.semester].push(subj)
+      this.curriculums[this.currentSpecIdx].connectPrerequisites(subj)
+      this.curriculums[this._currentSpecIdx].semesters[resp.semester].addNewSubject(subj)
       this._electiveSubjectsForm.name = ""
       this._electiveSubjectsForm.semester = -1
     }
@@ -410,23 +300,14 @@ export class AppComponent {
     this._subjectToDeleteSemester = idx
   }
 
-  //remove a subject and update the credits
+  //delete subject event handler
   public deleteSubject() {
-    const index = this.subjects[this._currentSpecIdx][this._subjectToDeleteSemester].indexOf(this._subjectToDelete, 0);
-    if (index > -1) {
-      this.subjects[this._currentSpecIdx][this._subjectToDeleteSemester].splice(index, 1);
-    }
-    if (this._subjectToDelete.status == 1) { //if status if enrolled
-      this.updateSubjectCredits([-1 * this._subjectToDelete.credit, 0], this._subjectToDeleteSemester)
-    }
-    else if (this._subjectToDelete.status == 2) { //if status is completed
-      this.updateSubjectCredits([-1 * this._subjectToDelete.credit, -1 * this._subjectToDelete.credit], this._subjectToDeleteSemester)
-    }
+    this.curriculums[this._currentSpecIdx].deleteSubject(this._subjectToDelete, this._subjectToDeleteSemester)
   }
 
-  //save the current state of the syllabus to a file
-  public saveSyllabusToFile() {
-    var content = JSON.stringify(this.subjects[this._currentSpecIdx], this.changePrerequisitesAndOverlaysToString);
+  //save the current state of the curriculum to a file
+  public saveCurriculumToFile() {
+    var content = JSON.stringify(this.curriculums[this._currentSpecIdx], this.changePrerequisitesAndOverlaysToString);
     content = '{"' + this._currentSpecName + '":' + content + "}"
     content = CryptoJS.AES.encrypt(content, PASSWORD).toString(); //encrypt the content for safety reasons
 
@@ -441,17 +322,12 @@ export class AppComponent {
     saveAs(blob, name);
   }
 
-  //reset the state of the syllabus to the initial state of the spec
-  resetSyllabus() {
-    var i = this._currentSpecIdx
-    this.subjects[i] = []
-    this._xhttpForSpec[i].open('GET', BACKEND_ADDRESS + ":" + BACKEND_PORT + "/" + this._specLinks[i], true)
-    this._xhttpForSpec[i].onreadystatechange = () => this.getObligatoryDataFromSpec(this._xhttpForSpec[i], this.subjects[i], this._specLinks[i] == "angol");
-    this._xhttpForSpec[i].send();
-    this.resetCredits()
+  //reset the state of the curriculum to the initial state of the spec
+  resetCurriculum() {
+    this.curriculums[this._currentSpecIdx] = new Curriculum(SPEC_NAMES[this._currentSpecIdx], SPEC_LINKS[this._currentSpecIdx])
   }
 
-  //open file which contains the state of a syllabus
+  //open file which contains the state of a curriculum
   public openFile(event: any) {
     var file = event.target.files[0]
     var reader = new FileReader();
@@ -482,335 +358,13 @@ export class AppComponent {
 
   //#region Private Methods
 
-  //get the data from backend for one spec 
-  private getDataFromSpec(xhttp: XMLHttpRequest, coreSubjects: Array<Array<Subject>>, electiveSubjects: Array<Subject>, isEnglish: boolean) {
-
-    if (xhttp.readyState == 4 && xhttp.status == 200) {
-      var resp = JSON.parse(JSON.parse(xhttp.responseText));
-
-      for (let i = 0; i < NUMBER_OF_COLUMNS; i++) {
-        coreSubjects.push([])
-      }
-
-      this.getObligatoryData(resp[0], coreSubjects, isEnglish)
-      this.getElectiveData(resp[1], electiveSubjects, coreSubjects, isEnglish)
-
-    }
-  }
-
-  //get the core subject list for one spec (without getting the electives)
-  private getObligatoryDataFromSpec(xhttp: XMLHttpRequest, coreSubjects: Array<Array<Subject>>, isEnglish: boolean) {
-
-    //check whether everything is ok with the backend
-    if (xhttp.readyState == 4 && xhttp.status == 200) {
-      var resp = JSON.parse(JSON.parse(xhttp.responseText));
-
-      for (let i = 0; i < NUMBER_OF_COLUMNS; i++) {
-        coreSubjects.push([])
-      }
-
-      this.getObligatoryData(resp[0], coreSubjects, isEnglish)
-
-    }
-  }
-
-  //get the core subject list from backend
-  private getObligatoryData(resp: any, coreSubjects: Array<Array<Subject>>, isEnglish: boolean) {
-
-    //iterate through every subject
-    for (var i = 0; i < resp.length; i++) {
-      var semester = resp[i]["Ajánlott félév"]
-
-      if (typeof semester === 'string') {
-        semester = parseInt(semester.split(",")[0]) //get the first semester from the recommended ones
-      }
-
-      //set type (Lecture or Practice)
-      var type = ""
-      if (resp[i]["Előadás"] > 0) {
-        if (resp[i]["Gyakorlat"] == 0 && resp[i]["Labor"] == 0) {
-          if (isEnglish) { type = "L" }
-          else { type = "EA" }
-        }
-      }
-      else {
-        if (isEnglish) { type = "P" }
-        else { type = "GY" }
-      }
-
-      coreSubjects[Math.floor(semester - 1)].push(new Subject(resp[i]["Kód"], resp[i]["Tanegység"], resp[i]["Kredit"], type, 0, [], [], 0, semester, resp[i]["Típus"], resp[i]["Ismeretkör"]))
-    }
-
-    //iterate through every subject
-    for (var i = 0; i < resp.length; i++) {
-      var semester = resp[i]["Ajánlott félév"]
-
-      if (typeof semester === 'string') {
-        semester = parseInt(semester.split(",")[0]) //get the first semester from the recommended ones
-      }
-
-      //find the current subject in the subject array
-      var col = Math.floor(semester - 1)
-      var idx = 0;
-      for (let j = 0; j < coreSubjects[col].length; j++) {
-        if (coreSubjects[col][j].code == resp[i]["Kód"]) {
-          idx = j;
-          break
-        }
-      }
-
-      //separate the prerequisites of the subject
-      var pre_code = []
-      if (resp[i]["Előfeltétel(ek)"] !== null) {
-        pre_code = resp[i]["Előfeltétel(ek)"].split(",").map((str: string) => str.trim())
-      }
-
-      //find all the subjects in the subjects list and add them as prerequisite
-      pre_code.forEach((code: string) => {
-        var words = code.split(" ")
-        var weak = false; //type of prerequisite
-
-        if (words.length > 1 && (words[1] == "(gyenge)" || words[1] == "(weak)")) {
-          weak = true
-        }
-
-        for (let j = 0; j <= col; j++)
-          for (let l = 0; l < coreSubjects[j].length; l++) {
-            if (coreSubjects[j][l].code == words[0]) {
-              coreSubjects[col][idx].pre.push({ subject: coreSubjects[j][l], weak: weak })
-              break
-            }
-          }
-
-      })
-
-      //separate the overlays of the subject
-      var over_code = []
-      if (resp[i]["Ráépülő"] != "") {
-        over_code = resp[i]["Ráépülő"].split(",").map((str: string) => str.trim())
-      }
-
-      //find all the subjects in the subjects list and add them as overlays
-      over_code.forEach((code: string) => {
-        for (let j = col; j < coreSubjects.length; j++)
-          for (let l = 0; l < coreSubjects[j].length; l++) {
-            if (coreSubjects[j][l].code == code) {
-              coreSubjects[col][idx].over.push(coreSubjects[j][l])
-              break
-            }
-          }
-      })
-
-    }
-
-    //add the 'Diploma work consultation' subject in the last semester
-    if (isEnglish) {
-      var thesis = new Subject("IP-18FSZD", "Diploma work consult.", 20, "", 0, [], [], 0, 6, "Kötelező", "")
-    }
-    else {
-      var thesis = new Subject("IP-08SZDPIBN18", "Szakdolgozati konz.", 20, "", 0, [], [], 0, 6, "Kötelező", "")
-    }
-
-    coreSubjects[NUMBER_OF_COLUMNS - 1].push(thesis)
-  }
-
-  //get the elective subject list from backend
-  private getElectiveData(resp: any, electiveSubjects: Array<Subject>, coreSubjects: Array<Array<Subject>>, isEnglish: boolean) {
-
-    //iterate through every subject
-    for (var i = 0; i < resp.length; i++) {
-      var semester = resp[i]["Ajánlott félév"]
-
-      if (typeof semester === 'string') {
-        semester = parseInt(semester.split(",")[0]) //get the first semester from the recommended ones
-      }
-
-      var type = ""  //set type (Lecture or Practice)
-      if (resp[i]["Előadás"] > 0) {
-        if (resp[i]["Gyakorlat"] == 0 && resp[i]["Labor"] == 0) {
-          if (isEnglish) { type = "L" }
-          else { type = "EA" }
-        }
-      }
-      else {
-        if (isEnglish) { type = "P" }
-        else { type = "GY" }
-      }
-
-      electiveSubjects.push(new Subject(resp[i]["Kód"], resp[i]["Tanegység"], resp[i]["Kredit"], type, 0, [], [], 0, semester, resp[i]["Típus"], resp[i]["Ismeretkör"]))
-    }
-
-    //iterate through every elective subject
-    for (var i = 0; i < electiveSubjects.length; i++) {
-
-      //separate the prerequisites of the subject
-      var pre_code = []
-      if (resp[i]["Előfeltétel(ek)"] !== null) {
-        pre_code = resp[i]["Előfeltétel(ek)"].split(",").map((str: string) => str.trim())
-      }
-
-      //find all the subjects in the elective subjects list and add them as prerequisite
-      pre_code.forEach((code: string) => {
-        var words = code.split(" ")
-        var weak = false;
-        if (words.length > 1 && (words[1] == "(gyenge)" || words[1] == "(weak)")) {
-          weak = true
-        }
-
-        //search in the elective subject list
-        var found = false;
-        for (let j = 0; j < electiveSubjects.length; j++) {
-          if (electiveSubjects[j].code == words[0]) {
-            electiveSubjects[i].pre.push({ subject: electiveSubjects[j], weak: weak })
-            found = true
-            break
-          }
-        }
-
-        //search in the core subject list
-        if (!found) {
-          for (let j = 0; j < coreSubjects.length && !found; j++)
-            for (let l = 0; l < coreSubjects[j].length; l++) {
-              if (coreSubjects[j][l].code == words[0]) {
-                electiveSubjects[i].pre.push({ subject: coreSubjects[j][l], weak: weak })
-                found = true
-                break
-              }
-            }
-        }
-
-
-      })
-
-      //separate the overlays of the subject
-      var over_code = []
-      if (resp[i]["Ráépülő"] != "") {
-        over_code = resp[i]["Ráépülő"].split(",").map((str: string) => str.trim())
-      }
-
-      //find all the subjects in the elective subjects list and add them as overlays
-      over_code.forEach((code: string) => {
-        for (let j = 0; j < electiveSubjects.length; j++) {
-          if (electiveSubjects[j].code == code) {
-            electiveSubjects[i].over.push(electiveSubjects[j])
-            break
-          }
-        }
-      })
-
-    }
-
-  }
-
-  //update credits if a subject status changes
-  private updateSubjectCredits(credit: Array<number>, idx: number): void {
-    this._enrolledCreditsSemester[idx] += credit[0]
-    this._enrolledCredits += credit[0]
-    this._completedCreditsSemester[idx] += credit[1]
-    this._completedCredits += credit[1]
-    this._completedCreditsPerc = this._completedCredits / 18 * 10 + "%"
-    this._enrolledCreditsPerc = this._enrolledCredits / 18 * 10 + "%"
-  }
-
-  //check whether the prerequisites of a subject are completed
-  private checkPrerequisites(subj: Subject): Boolean {
-    var pre: Array<string> = [] //will contain the prerequisites which are not completed
-
-    //iterate through the prerequisites and check the completion
-    subj.pre.forEach(elem => {
-      if (elem.subject.status != 2) {
-        if (elem.subject.status == 0 && elem.weak) {
-          pre.push(elem.subject.name + " " + elem.subject.type + " (gyenge)")
-        }
-        else if (elem.subject.status == 0 || !elem.weak) {
-          pre.push(elem.subject.name + " " + elem.subject.type)
-        }
-      }
-    });
-
-    //if some prerequisites are not completed
-    if (pre.length > 0) {
-      var resp: string
-
-      if (this._isLanguageHu) { resp = "A következő előfeltételek nem teljesültek:\n" }
-      else { resp = "The following prerequisites are not completed:\n" }
-
-      pre.forEach(e => { resp += e + "\n" })
-
-      swal(resp);
-      return false;
-    }
-
-    return true
-  }
-
-  //show the prerequisites of a subject
-  private showPrerequisites(subj: Subject) {
-    subj.pre.forEach(elem => {
-      elem.subject.border = 2
-    });
-  }
-
-  //hide the prerequisites of a subject
-  private hidePrerequisites(subj: Subject) {
-    subj.pre.forEach(elem => {
-      elem.subject.border = 0
-    });
-  }
-
-  //show the overlays of a subject
-  private showOverlays(subj: Subject) {
-    subj.over.forEach(elem => {
-      elem.border = 3
-    });
-  }
-
-  //hide the overlays of a subject
-  private hideOverlays(subj: Subject) {
-    subj.over.forEach(elem => {
-      elem.border = 0
-    });
-  }
-
-  //if a subject's status changes from completed to not enrolled, the overlay subjects' status also reflect that 
-  private resetOverlays(subj: Subject) {
-
-    //iterate through the overlays
-    subj.over.forEach(elem => {
-      if (elem.status != 0) { //if the overlay subject's status is enrolled or completed
-        var col = -1;
-        for (let i = 0; i < this.subjects[this._currentSpecIdx].length; i++) { //finding the column which contains it
-          if (this.subjects[this._currentSpecIdx][i].includes(elem)) {
-            col = i;
-            break;
-          }
-        }
-        if (elem.status == 1) { //update credits if the status was enrolled
-          this.updateSubjectCredits([-1 * elem.credit, 0], col)
-        }
-        else if (elem.status == 2) { //update credits if the status was completed
-          this.updateSubjectCredits([-1 * elem.credit, -1 * elem.credit], col)
-        }
-        elem.status = 0;
-      }
-    });
-  }
-
-  //update the order when a subject is dropped in the same semester
-  private moveItemInArray(columnIdx: number, prevIdx: number, currentIdx: number) {
-    const itemToMove = this.subjects[this._currentSpecIdx][columnIdx][prevIdx];
-
-    this.subjects[this._currentSpecIdx][columnIdx].splice(prevIdx, 1);
-    this.subjects[this._currentSpecIdx][columnIdx].splice(currentIdx, 0, itemToMove);
-  }
-
   //update the semesters when a subject is dropped into another semester
   private transferArrayItem(prevColumnIdx: number, columnIdx: number, prevIdx: number, currentIdx: number) {
 
-    const itemToMove = this.subjects[this._currentSpecIdx][prevColumnIdx][prevIdx];
+    const itemToMove = this.curriculums[this._currentSpecIdx].semesters[prevColumnIdx].subjects[prevIdx];
 
     //check whether the subject can be moved to the semester
-    if (this.prerequisiteIsFurther(itemToMove, columnIdx) || this.overlayIsSooner(itemToMove, columnIdx)) {
+    if (this.curriculums[this.currentSpecIdx].prerequisiteIsFurther(itemToMove, columnIdx) || this.curriculums[this.currentSpecIdx].overlayIsSooner(itemToMove, columnIdx)) {
       if (this._isLanguageHu) {
         swal("Nem veheted fel a tárgyat a kiválasztott félévbe, mivel az előkövetelmények nem teljesülnek.")
       }
@@ -829,105 +383,7 @@ export class AppComponent {
       }
     }
 
-    this.subjects[this._currentSpecIdx][prevColumnIdx].splice(prevIdx, 1);
-    this.subjects[this._currentSpecIdx][columnIdx].splice(currentIdx, 0, itemToMove);
-  }
-
-  //check if a prerequisite is in a further semester (or in the same semester)
-  private prerequisiteIsFurther(subject: Subject, columnIdx: number) {
-    for (let p = 0; p < subject.pre.length; p++) {
-      for (let i = columnIdx + 1; i < this.subjects[this._currentSpecIdx].length; i++) {
-        for (let j = 0; j < this.subjects[this._currentSpecIdx][i].length; j++) {
-          if (subject.pre[p].subject.code == this.subjects[this._currentSpecIdx][i][j].code) {
-            return true
-          }
-        }
-      }
-
-      //in the same semester but the interdependency is not weak
-      for (let j = 0; j < this.subjects[this._currentSpecIdx][columnIdx].length; j++) {
-        if (subject.pre[p].subject.code == this.subjects[this._currentSpecIdx][columnIdx][j].code) {
-          var isWeak = false;
-          for (let k = 0; k < subject.pre.length; k++) {
-            if (subject.pre[k].subject == this.subjects[this._currentSpecIdx][columnIdx][j] && subject.pre[k].weak) {
-              isWeak = true
-            }
-          }
-          if (!isWeak) {
-            return true
-          }
-        }
-      }
-    }
-    return false
-  }
-
-  //check if an overlay is in a sooner semester (or in the same semester)
-  private overlayIsSooner(subject: Subject, columnIdx: number) {
-    for (let p = 0; p < subject.over.length; p++) {
-      for (let i = 0; i < columnIdx; i++) {
-        for (let j = 0; j < this.subjects[this._currentSpecIdx][i].length; j++) {
-          if (subject.over[p].code == this.subjects[this._currentSpecIdx][i][j].code) {
-            return true
-          }
-        }
-      }
-
-      //in the same semester but the interdependency is not weak
-      for (let j = 0; j < this.subjects[this._currentSpecIdx][columnIdx].length; j++) {
-        if (subject.over[p].code == this.subjects[this._currentSpecIdx][columnIdx][j].code) {
-          var isWeak = false;
-          for (let k = 0; k < this.subjects[this._currentSpecIdx][columnIdx][j].pre.length; k++) {
-            if (this.subjects[this._currentSpecIdx][columnIdx][j].pre[k].subject == subject && this.subjects[this._currentSpecIdx][columnIdx][j].pre[k].weak) {
-              isWeak = true
-            }
-          }
-          if (!isWeak) {
-            return true
-          }
-        }
-      }
-    }
-    return false
-  }
-
-  //recalculate the credits in a semester
-  private updateCredits(index: number) {
-    this._completedCredits = 0;
-    this._enrolledCredits = 0;
-
-    for (let i = 0; i < this.subjects[index].length; i++) {
-      this._enrolledCreditsSemester[i] = 0
-      this._completedCreditsSemester[i] = 0
-
-      for (let j = 0; j < this.subjects[index][i].length; j++) {
-        var subj = this.subjects[index][i][j]
-        if (subj.status == 1) {
-          this._enrolledCreditsSemester[i] += subj.credit
-        }
-        else if (subj.status == 2) {
-          this._enrolledCreditsSemester[i] += subj.credit
-          this._completedCreditsSemester[i] += subj.credit
-        }
-      }
-
-      this._completedCredits += this._completedCreditsSemester[i]
-      this._enrolledCredits += this._enrolledCreditsSemester[i]
-    }
-
-    this._completedCreditsPerc = this._completedCredits / 18 * 10 + "%"
-    this._enrolledCreditsPerc = this._enrolledCredits / 18 * 10 + "%"
-  }
-
-  //check if the subject that needs to be added is already in the list
-  private subjectIsAlreadyIn(code: string) {
-    for (let i = 0; i < this.subjects[this._currentSpecIdx].length; i++) {
-      for (let j = 0; j < this.subjects[this._currentSpecIdx][i].length; j++)
-        if (this.subjects[this._currentSpecIdx][i][j].code == code) {
-          return true
-        }
-    }
-    return false
+    this.curriculums[this.currentSpecIdx].moveItemInArray(prevColumnIdx, columnIdx, prevIdx, currentIdx)
   }
 
   //show error message for the user if the data for the optional subject is not good
@@ -977,67 +433,33 @@ export class AppComponent {
     return (name && code && credit)
   }
 
-  //connect the newly added elective subject prerequisites with the core subject overlays
-  private connectPrerequisites(subject: Subject) {
-    for (let i = 0; i < subject.pre.length; i++) {
-      if (subject.pre[i].subject.spec == "Kötelező" && !subject.pre[i].subject.over.includes(subject)) {
-        this.updatePrerequisite(subject, subject.pre[i].subject)
-      }
-    }
-  }
-
-  //recursively adds a new subject to the overlay list of another subject
-  private updatePrerequisite(newOverSubject: Subject, subject: Subject) {
-    subject.over.push(newOverSubject)
-    subject.over = subject.over.concat(newOverSubject.over)
-    for (let i = 0; i < subject.pre.length; i++) {
-      this.updatePrerequisite(newOverSubject, subject.pre[i].subject)
-    }
-  }
-
   //change the subject types to string to create JSON from it
   private changePrerequisitesAndOverlaysToString(key: any, value: any): any {
     if (key === "_pre") {
-      var subjects = value
+      var curriculums = value
       value = []
-      for (let i = 0; i < subjects.length; i++) {
-        var pre = subjects[i]
+      for (let i = 0; i < curriculums.length; i++) {
+        var pre = curriculums[i]
         pre.subject = pre.subject.code
         value.push(pre)
       }
     }
     else if (key === "_over") {
-      var subjects = value
+      var curriculums = value
       value = []
-      for (let i = 0; i < subjects.length; i++) {
-        value.push(subjects[i].code)
+      for (let i = 0; i < curriculums.length; i++) {
+        value.push(curriculums[i].code)
       }
     }
     return value;
   }
 
-  //reset the credits in a semester to initial state
-  private resetCredits() {
-    for (let i = 0; i < this._completedCreditsSemester.length; i++) {
-      this._enrolledCreditsSemester[i] = 0
-      this._completedCreditsSemester[i] = 0
-    }
-    this._completedCredits = 0
-    this._enrolledCredits = 0
-    this._enrolledCreditsPerc = "0%"
-    this._completedCreditsPerc = "0%"
-  }
-
-  //load the content of the file and build a syllabus from it
+  //load the content of the file and build a curriculum from it
   private loadDataFromFile(content: string) {
-    var coreSubjects = Array<Array<Subject>>()
-    var complCredits = []
-    var credits = []
-
     try {
       const jsonObject = JSON.parse(content);
 
-      //if the syllabus in the file belongs to the current spec 
+      //if the curriculum in the file belongs to the current spec 
       if (!jsonObject.hasOwnProperty(this._currentSpecName)) {
         if (this._isLanguageHu) {
           swal({ text: "Nem megfelelő tanterv!", dangerMode: true })
@@ -1048,72 +470,10 @@ export class AppComponent {
         return
       }
 
-      const syllabus = jsonObject[this._currentSpecName]
+      const curriculum = jsonObject[this._currentSpecName]
 
-      for (let i = 0; i < syllabus.length; i++) {
-        coreSubjects.push([])
-        credits.push(0)
-        complCredits.push(0)
-
-        for (let j = 0; j < syllabus[i].length; j++) {
-          var subj = syllabus[i][j]
-          //add subject
-          coreSubjects[i].push(new Subject(subj.code, subj.name, subj.credit, subj.type, subj.status, [], [], 0, subj.proposedSemester,subj.spec, subj.ken))
-          if (subj.status == 1) { //if the status is enrolled
-            credits[i] += subj.credit
-          }
-          else if (subj.status == 2) { //if the status is completed
-            credits[i] += subj.credit
-            complCredits[i] += subj.credit
-          }
-        }
-      }
-
-      for (let i = 0; i < syllabus.length; i++) {
-        for (let j = 0; j < syllabus[i].length; j++) {
-
-          //add the prerequisites for every subject
-          var subj = syllabus[i][j]
-          for (let l = 0; l < subj.pre.length; l++) {
-            for (let k = 0; k <= i; k++) {
-              for (let m = 0; m < coreSubjects[k].length; m++) {
-                if (coreSubjects[k][m].code == subj.pre[l].subject) {
-                  coreSubjects[i][j].pre.push({ subject: coreSubjects[k][m], weak: subj.pre[l].weak })
-                  break
-                }
-              }
-            }
-          }
-
-          //add the overlays for every subject
-          for (let l = 0; l < subj.over.length; l++) {
-            for (let k = i; k < syllabus.length; k++) {
-              for (let m = 0; m < coreSubjects[k].length; m++) {
-                if (coreSubjects[k][m].code == subj.over[l]) {
-                  coreSubjects[i][j].over.push(coreSubjects[k][m])
-                  break
-                }
-              }
-            }
-          }
-        }
-      }
-
-      //reinitialize the credits
-      this._completedCredits = 0
-      this._enrolledCredits = 0
-      this._completedCreditsSemester = complCredits
-      this._enrolledCreditsSemester = credits
-
-      //recalculate the credits
-      for (let i = 0; i < complCredits.length; i++) {
-        this._completedCredits += complCredits[i]
-        this._enrolledCredits += credits[i]
-      }
-
-      this._completedCreditsPerc = this._completedCredits / 18 * 10 + "%"
-      this._enrolledCreditsPerc = this._enrolledCredits / 18 * 10 + "%"
-      this.subjects[this._currentSpecIdx] = coreSubjects
+      this.curriculums[this.currentSpecIdx].getSubjects(curriculum)
+     
     }
     catch (error) {
       if (this._isLanguageHu) {
@@ -1126,6 +486,726 @@ export class AppComponent {
   }
 
   //#endregion 
+
+}
+
+class Curriculum {
+
+  //#region Properties
+
+  private _completedCredits: number
+  private _enrolledCredits: number
+  private _completedCreditsPerc: string
+  private _enrolledCreditsPerc: string
+  private _semesters: Array<Semester>
+  private _electiveSubjects: Array<Subject>
+  private _xhttp: XMLHttpRequest;
+  private _specLink: string;
+  private _specName: string;
+  private _currentSubjectCode: string = "";
+
+  //#endregion
+
+  //#region Getters and Setters
+
+  public get completedCredits(): number {
+    return this._completedCredits
+  }
+
+  public get enrolledCredits(): number {
+    return this._enrolledCredits
+  }
+
+  public get completedCreditsPerc(): string {
+    return this._completedCreditsPerc
+  }
+
+  public get enrolledCreditsPerc(): string {
+    return this._enrolledCreditsPerc
+  }
+
+  public get semesters(): Array<Semester> {
+    return this._semesters
+  }
+
+  public get electiveSubjects(): Array<Subject> {
+    return this._electiveSubjects
+  }
+
+  public get specName(): string {
+    return this._specName
+  }
+
+  public get specLink(): string {
+    return this._specLink
+  }
+
+  public get currentSubjectCode(): string {
+    return this._currentSubjectCode
+  }
+
+  //#endregion
+
+  //#region Constructors
+
+  constructor(specName: string, specLink: string) {
+    //initialize enrolled and completed credits in a semester
+    this._completedCredits = 0
+    this._enrolledCredits = 0
+    this._enrolledCreditsPerc = "0%"
+    this._completedCreditsPerc = "0%"
+
+    //initialize the semester
+    this._semesters = []
+    this._electiveSubjects = []
+    this._specName = specName
+    this._specLink = specLink
+    this._xhttp = new XMLHttpRequest();
+
+    //get the data from the backend with XMLHttpRequest
+    this._xhttp.open('GET', BACKEND_ADDRESS + ":" + BACKEND_PORT + "/" + specLink, true)
+    this._xhttp.onreadystatechange = () => this.getData(specLink == "angol");
+    this._xhttp.send();
+  }
+
+  //#endregion
+
+  //#region Public Methods
+
+  //handles the click event for a subject
+  public changeSubjectStatus(subj: Subject, idx: number): string[] {
+    var enrolled;
+    var completed;
+
+    this.updateCurrentSubjectCode(subj.code)
+
+    subj.border = 1
+
+    if (subj.status == 0) {  //not enrolled status
+      this.showPrerequisites(subj)
+      var pre = this.checkPrerequisites(subj)
+      if (pre.length > 0) {
+        return pre
+      }
+      enrolled = subj.credit
+      completed = 0
+    }
+    else if (subj.status == 1) { //enrolled status
+      enrolled = 0
+      completed = subj.credit
+      this.hidePrerequisites(subj)
+      this.showOverlays(subj)
+    }
+    else { //completed status
+      enrolled = completed = -1 * subj.credit
+      this.resetOverlays(subj)
+      this.hideOverlays(subj)
+    }
+
+    subj.status = (subj.status + 1) % 3 //update status
+    this.updateSubjectCredits([enrolled, completed], idx) //update credits
+
+    return []
+  }
+
+  //updates the subject which is currently chosen
+  public updateCurrentSubjectCode(newValue: string) {
+
+    //if a subject was previously chosen and it is active
+    if (this._currentSubjectCode != "") {
+      for (let i = 0; i < this.semesters.length; i++)
+        for (let j = 0; j < this.semesters[i].subjects.length; j++) {
+          if (this.semesters[i].subjects[j].code == this._currentSubjectCode) {
+            this.semesters[i].subjects[j].border = 0 //remove the mark
+            if (this.semesters[i].subjects[j].status != 2) {
+              this.hidePrerequisites(this.semesters[i].subjects[j])
+            }
+            else if (this.semesters[i].subjects[j].status == 2) {
+              this.hideOverlays(this.semesters[i].subjects[j])
+            }
+            break;
+          }
+        }
+    }
+
+    this._currentSubjectCode = newValue //update the active subject with the new value
+  }
+
+   //recalculate the credits in a semester
+   public updateCredits() {
+    this._completedCredits = 0;
+    this._enrolledCredits = 0;
+
+    for (let i = 0; i < this.semesters.length; i++) {
+      this.semesters[i].enrolledCredits = 0
+      this.semesters[i].completedCredits = 0
+
+      for (let j = 0; j < this.semesters[i].subjects.length; j++) {
+        var subj = this.semesters[i].subjects[j]
+        if (subj.status == 1) {
+          this.semesters[i].enrolledCredits += subj.credit
+        }
+        else if (subj.status == 2) {
+          this.semesters[i].enrolledCredits += subj.credit
+          this.semesters[i].completedCredits += subj.credit
+        }
+      }
+
+      this._completedCredits += this.semesters[i].completedCredits
+      this._enrolledCredits += this.semesters[i].enrolledCredits 
+    }
+
+    this._completedCreditsPerc = this._completedCredits / 18 * 10 + "%"
+    this._enrolledCreditsPerc = this._enrolledCredits / 18 * 10 + "%"
+  }
+
+  public addNewSemester(): void{
+    this.semesters.push(new Semester())
+  }
+
+  public deleteSemester(index: number): void {
+    this.semesters.splice(index, 1)
+  }
+
+  //check if the subject that needs to be added is already in the list
+  public subjectIsAlreadyIn(code: string) {
+    for (let i = 0; i < this.semesters.length; i++) {
+      for (let j = 0; j < this.semesters[i].subjects.length; j++)
+        if (this.semesters[i].subjects[j].code == code) {
+          return true
+        }
+    }
+    return false
+  }
+
+  //check if a prerequisite is in a further semester (or in the same semester)
+  public prerequisiteIsFurther(subject: Subject, columnIdx: number) {
+    for (let p = 0; p < subject.pre.length; p++) {
+      for (let i = columnIdx + 1; i < this.semesters.length; i++) {
+        for (let j = 0; j < this.semesters[i].subjects.length; j++) {
+          if (subject.pre[p].subject.code == this.semesters[i].subjects[j].code) {
+            return true
+          }
+        }
+      }
+
+      //in the same semester but the interdependency is not weak
+      for (let j = 0; j < this.semesters[columnIdx].subjects.length; j++) {
+        if (subject.pre[p].subject.code == this.semesters[columnIdx].subjects[j].code) {
+          var isWeak = false;
+          for (let k = 0; k < subject.pre.length; k++) {
+            if (subject.pre[k].subject == this.semesters[columnIdx].subjects[j] && subject.pre[k].weak) {
+              isWeak = true
+            }
+          }
+          if (!isWeak) {
+            return true
+          }
+        }
+      }
+    }
+    return false
+  }
+
+  //check if an overlay is in a sooner semester (or in the same semester)
+  public overlayIsSooner(subject: Subject, columnIdx: number) {
+    for (let p = 0; p < subject.over.length; p++) {
+      for (let i = 0; i < columnIdx; i++) {
+        for (let j = 0; j < this.semesters[i].subjects.length; j++) {
+          if (subject.over[p].code == this.semesters[i].subjects[j].code) {
+            return true
+          }
+        }
+      }
+
+      //in the same semester but the interdependency is not weak
+      for (let j = 0; j < this.semesters[columnIdx].subjects.length; j++) {
+        if (subject.over[p].code == this.semesters[columnIdx].subjects[j].code) {
+          var isWeak = false;
+          for (let k = 0; k < this.semesters[columnIdx].subjects[j].pre.length; k++) {
+            if (this.semesters[columnIdx].subjects[j].pre[k].subject == subject && this.semesters[columnIdx].subjects[j].pre[k].weak) {
+              isWeak = true
+            }
+          }
+          if (!isWeak) {
+            return true
+          }
+        }
+      }
+    }
+    return false
+  }
+
+   //connect the newly added elective subject prerequisites with the core subject overlays
+   public connectPrerequisites(subject: Subject) {
+    for (let i = 0; i < subject.pre.length; i++) {
+      if (subject.pre[i].subject.spec == "Kötelező" && !subject.pre[i].subject.over.includes(subject)) {
+        this.updatePrerequisite(subject, subject.pre[i].subject)
+      }
+    }
+  }
+
+  //remove a subject and update the credits
+  public deleteSubject(subj: Subject, semesterIdx: number): void {
+    const index = this.semesters[semesterIdx].subjects.indexOf(subj, 0);
+    if (index > -1) {
+      this.semesters[semesterIdx].deleteSubject(index)
+    }
+    if (subj.status == 1) { //if status if enrolled
+      this.updateSubjectCurriculumCredits([-1 * subj.credit, 0], semesterIdx)
+    }
+    else if (subj.status == 2) { //if status is completed
+      this.updateSubjectCurriculumCredits([-1 * subj.credit, -1 * subj.credit], semesterIdx)
+    }
+  }
+
+  public getSubjects(curriculum: any){
+    this._semesters = []
+
+    for (let i = 0; i < curriculum.length; i++) {
+      this._semesters.push(new Semester())
+
+      for (let j = 0; j < curriculum[i].length; j++) {
+        var subj = curriculum[i][j]
+        //add subject
+        this._semesters[i].addNewSubject(new Subject(subj.code, subj.name, subj.credit, subj.type, subj.status, [], [], 0, subj.proposedSemester, subj.spec, subj.ken))
+      }
+    }
+
+    for (let i = 0; i < curriculum.length; i++) {
+      for (let j = 0; j < curriculum[i].length; j++) {
+
+        //add the prerequisites for every subject
+        var subj = curriculum[i][j]
+        for (let l = 0; l < subj.pre.length; l++) {
+          for (let k = 0; k <= i; k++) {
+            for (let m = 0; m < this.semesters[k].subjects.length; m++) {
+              if (this.semesters[k].subjects[m].code == subj.pre[l].subject) {
+                this.semesters[i].subjects[j].pre.push({ subject: this.semesters[k].subjects[m], weak: subj.pre[l].weak })
+                break
+              }
+            }
+          }
+        }
+
+        //add the overlays for every subject
+        for (let l = 0; l < subj.over.length; l++) {
+          for (let k = i; k < curriculum.length; k++) {
+            for (let m = 0; m < this.semesters[k].subjects.length; m++) {
+              if (this.semesters[k].subjects[m].code == subj.over[l]) {
+                this.semesters[i].subjects[j].over.push(this.semesters[k].subjects[m])
+                break
+              }
+            }
+          }
+        }
+      }
+    }
+
+    //reinitialize the credits
+    this._completedCredits = 0
+    this._enrolledCredits = 0
+
+    //recalculate the credits
+    for (let i = 0; i < this.semesters.length; i++) {
+      this._completedCredits += this.semesters[i].enrolledCredits
+      this._enrolledCredits += this.semesters[i].completedCredits
+    }
+
+    this._completedCreditsPerc = this._completedCredits / 18 * 10 + "%"
+    this._enrolledCreditsPerc = this._enrolledCredits / 18 * 10 + "%"
+  }
+
+  //update the order when a subject is dropped in the same semester
+  public moveItemInArray(prevColumnIdx: number, columnIdx: number, prevIdx: number, currentIdx: number) {
+    const itemToMove = this.semesters[prevColumnIdx].subjects[prevIdx];
+
+    this.semesters[prevColumnIdx].subjects.splice(prevIdx, 1);
+    this.semesters[columnIdx].subjects.splice(currentIdx, 0, itemToMove);
+  }
+
+  //#endregion
+
+  //#region Private Methods
+
+  //show the prerequisites of a subject
+  private showPrerequisites(subj: Subject) {
+    subj.pre.forEach(elem => {
+      elem.subject.border = 2
+    });
+  }
+
+  //hide the prerequisites of a subject
+  private hidePrerequisites(subj: Subject) {
+    subj.pre.forEach(elem => {
+      elem.subject.border = 0
+    });
+  }
+
+  //show the overlays of a subject
+  private showOverlays(subj: Subject) {
+    subj.over.forEach(elem => {
+      elem.border = 3
+    });
+  }
+
+  //hide the overlays of a subject
+  private hideOverlays(subj: Subject) {
+    subj.over.forEach(elem => {
+      elem.border = 0
+    });
+  }
+
+  //check whether the prerequisites of a subject are completed
+  private checkPrerequisites(subj: Subject): string[] {
+    var pre: Array<string> = [] //will contain the prerequisites which are not completed
+
+    //iterate through the prerequisites and check the completion
+    subj.pre.forEach(elem => {
+      if (elem.subject.status != 2) {
+        if (elem.subject.status == 0 && elem.weak) {
+          pre.push(elem.subject.name + " " + elem.subject.type + " (gyenge)")
+        }
+        else if (elem.subject.status == 0 || !elem.weak) {
+          pre.push(elem.subject.name + " " + elem.subject.type)
+        }
+      }
+    });
+
+    return pre;
+
+  }
+
+  //if a subject's status changes from completed to not enrolled, the overlay curriculums' status also reflect that 
+  private resetOverlays(subj: Subject) {
+
+    //iterate through the overlays
+    subj.over.forEach(elem => {
+      if (elem.status != 0) { //if the overlay subject's status is enrolled or completed
+        var col = -1;
+        for (let i = 0; i < this.semesters.length; i++) { //finding the column which contains it
+          if (this.semesters[i].subjects.includes(elem)) {
+            col = i;
+            break;
+          }
+        }
+        if (elem.status == 1) { //update credits if the status was enrolled
+          this.updateSubjectCredits([-1 * elem.credit, 0], col)
+        }
+        else if (elem.status == 2) { //update credits if the status was completed
+          this.updateSubjectCredits([-1 * elem.credit, -1 * elem.credit], col)
+        }
+        elem.status = 0;
+      }
+    });
+  }
+
+  //update all credits if a subject status changes
+  private updateSubjectCredits(credit: Array<number>, idx: number): void {
+    this.semesters[idx].enrolledCredits += credit[0]
+    this._enrolledCredits += credit[0]
+    this.semesters[idx].completedCredits += credit[1]
+    this._completedCredits += credit[1]
+    this._completedCreditsPerc = this._completedCredits / 18 * 10 + "%"
+    this._enrolledCreditsPerc = this._enrolledCredits / 18 * 10 + "%"
+  }
+
+  //update only curriculum credits if a subject status changes
+  private updateSubjectCurriculumCredits(credit: Array<number>, idx: number): void {
+    this._enrolledCredits += credit[0]
+    this._completedCredits += credit[1]
+    this._completedCreditsPerc = this._completedCredits / 18 * 10 + "%"
+    this._enrolledCreditsPerc = this._enrolledCredits / 18 * 10 + "%"
+  }
+
+  //recursively adds a new subject to the overlay list of another subject
+  private updatePrerequisite(newOverSubject: Subject, subject: Subject) {
+    subject.over.push(newOverSubject)
+    subject.over = subject.over.concat(newOverSubject.over)
+    for (let i = 0; i < subject.pre.length; i++) {
+      this.updatePrerequisite(newOverSubject, subject.pre[i].subject)
+    }
+  }
+
+  //get the data from backend for one spec 
+  private getData(isEnglish: boolean) {
+    if (this._xhttp.readyState == 4 && this._xhttp.status == 200) {
+      var resp = JSON.parse(JSON.parse(this._xhttp.responseText));
+
+      for (let i = 0; i < NUMBER_OF_COLUMNS; i++) {
+        this.addNewSemester()
+      }
+
+      this.getObligatoryData(resp[0], isEnglish)
+      this.getElectiveData(resp[1], isEnglish)
+    }
+  }
+
+  //get the core subject list from backend
+  private getObligatoryData(resp: any, isEnglish: boolean) {
+
+    //iterate through every subject
+    for (var i = 0; i < resp.length; i++) {
+      var semester = resp[i]["Ajánlott félév"]
+
+      if (typeof semester === 'string') {
+        semester = parseInt(semester.split(",")[0]) //get the first semester from the recommended ones
+      }
+
+      //set type (Lecture or Practice)
+      var type = ""
+      if (resp[i]["Előadás"] > 0) {
+        if (resp[i]["Gyakorlat"] == 0 && resp[i]["Labor"] == 0) {
+          if (isEnglish) { type = "L" }
+          else { type = "EA" }
+        }
+      }
+      else {
+        if (isEnglish) { type = "P" }
+        else { type = "GY" }
+      }
+
+      this.semesters[Math.floor(semester - 1)].addNewSubject(new Subject(resp[i]["Kód"], resp[i]["Tanegység"], resp[i]["Kredit"], type, 0, [], [], 0, semester, resp[i]["Típus"], resp[i]["Ismeretkör"]))
+    }
+
+    //iterate through every subject
+    for (var i = 0; i < resp.length; i++) {
+      var semester = resp[i]["Ajánlott félév"]
+
+      if (typeof semester === 'string') {
+        semester = parseInt(semester.split(",")[0]) //get the first semester from the recommended ones
+      }
+
+      //find the current subject in the subject array
+      var col = Math.floor(semester - 1)
+      var idx = 0;
+      for (let j = 0; j < this.semesters[col].subjects.length; j++) {
+        if (this.semesters[col].subjects[j].code == resp[i]["Kód"]) {
+          idx = j;
+          break
+        }
+      }
+
+      //separate the prerequisites of the subject
+      var pre_code = []
+      if (resp[i]["Előfeltétel(ek)"] !== null) {
+        pre_code = resp[i]["Előfeltétel(ek)"].split(",").map((str: string) => str.trim())
+      }
+
+      //find all the curriculums in the curriculums list and add them as prerequisite
+      pre_code.forEach((code: string) => {
+        var words = code.split(" ")
+        var weak = false; //type of prerequisite
+
+        if (words.length > 1 && (words[1] == "(gyenge)" || words[1] == "(weak)")) {
+          weak = true
+        }
+
+        for (let j = 0; j <= col; j++)
+          for (let l = 0; l < this.semesters[j].subjects.length; l++) {
+            if (this.semesters[j].subjects[l].code == words[0]) {
+              this.semesters[col].subjects[idx].pre.push({ subject: this.semesters[j].subjects[l], weak: weak })
+              break
+            }
+          }
+
+      })
+
+      //separate the overlays of the subject
+      var over_code = []
+      if (resp[i]["Ráépülő"] != "") {
+        over_code = resp[i]["Ráépülő"].split(",").map((str: string) => str.trim())
+      }
+
+      //find all the curriculums in the curriculums list and add them as overlays
+      over_code.forEach((code: string) => {
+        for (let j = col; j < this.semesters.length; j++)
+          for (let l = 0; l < this.semesters[j].subjects.length; l++) {
+            if (this.semesters[j].subjects[l].code == code) {
+              this.semesters[col].subjects[idx].over.push(this.semesters[j].subjects[l])
+              break
+            }
+          }
+      })
+
+    }
+
+    //add the 'Diploma work consultation' subject in the last semester
+    if (isEnglish) {
+      var thesis = new Subject("IP-18FSZD", "Diploma work consult.", 20, "", 0, [], [], 0, 6, "Kötelező", "")
+    }
+    else {
+      var thesis = new Subject("IP-08SZDPIBN18", "Szakdolgozati konz.", 20, "", 0, [], [], 0, 6, "Kötelező", "")
+    }
+
+    this.semesters[NUMBER_OF_COLUMNS - 1].addNewSubject(thesis)
+  }
+
+  //get the elective subject list from backend
+  private getElectiveData(resp: any, isEnglish: boolean) {
+
+    //iterate through every subject
+    for (var i = 0; i < resp.length; i++) {
+      var semester = resp[i]["Ajánlott félév"]
+
+      if (typeof semester === 'string') {
+        semester = parseInt(semester.split(",")[0]) //get the first semester from the recommended ones
+      }
+
+      var type = ""  //set type (Lecture or Practice)
+      if (resp[i]["Előadás"] > 0) {
+        if (resp[i]["Gyakorlat"] == 0 && resp[i]["Labor"] == 0) {
+          if (isEnglish) { type = "L" }
+          else { type = "EA" }
+        }
+      }
+      else {
+        if (isEnglish) { type = "P" }
+        else { type = "GY" }
+      }
+
+      this.electiveSubjects.push(new Subject(resp[i]["Kód"], resp[i]["Tanegység"], resp[i]["Kredit"], type, 0, [], [], 0, semester, resp[i]["Típus"], resp[i]["Ismeretkör"]))
+    }
+
+    //iterate through every elective subject
+    for (var i = 0; i < this.electiveSubjects.length; i++) {
+
+      //separate the prerequisites of the subject
+      var pre_code = []
+      if (resp[i]["Előfeltétel(ek)"] !== null) {
+        pre_code = resp[i]["Előfeltétel(ek)"].split(",").map((str: string) => str.trim())
+      }
+
+      //find all the curriculums in the elective curriculums list and add them as prerequisite
+      pre_code.forEach((code: string) => {
+        var words = code.split(" ")
+        var weak = false;
+        if (words.length > 1 && (words[1] == "(gyenge)" || words[1] == "(weak)")) {
+          weak = true
+        }
+
+        //search in the elective subject list
+        var found = false;
+        for (let j = 0; j < this.electiveSubjects.length; j++) {
+          if (this.electiveSubjects[j].code == words[0]) {
+            this.electiveSubjects[i].pre.push({ subject: this.electiveSubjects[j], weak: weak })
+            found = true
+            break
+          }
+        }
+
+        //search in the core subject list
+        if (!found) {
+          for (let j = 0; j < this.semesters.length && !found; j++)
+            for (let l = 0; l < this.semesters[j].subjects.length; l++) {
+              if (this.semesters[j].subjects[l].code == words[0]) {
+                this.electiveSubjects[i].pre.push({ subject: this.semesters[j].subjects[l], weak: weak })
+                found = true
+                break
+              }
+            }
+        }
+
+      })
+
+      //separate the overlays of the subject
+      var over_code = []
+      if (resp[i]["Ráépülő"] != "") {
+        over_code = resp[i]["Ráépülő"].split(",").map((str: string) => str.trim())
+      }
+
+      //find all the curriculums in the elective curriculums list and add them as overlays
+      over_code.forEach((code: string) => {
+        for (let j = 0; j < this.electiveSubjects.length; j++) {
+          if (this.electiveSubjects[j].code == code) {
+            this.electiveSubjects[i].over.push(this.electiveSubjects[j])
+            break
+          }
+        }
+      })
+
+    }
+
+  }
+  
+  //#endregion
+
+}
+
+class Semester {
+
+  //#region Properties
+
+  private _subjects: Array<Subject>
+  private _completedCredits: number
+  private _enrolledCredits: number
+
+  //#endregion
+
+  //#region Getters and Setters
+
+  public get completedCredits(): number {
+    return this._completedCredits
+  }
+
+  public set completedCredits(value: number) {
+    this._completedCredits = value
+  }
+
+  public get enrolledCredits(): number {
+    return this._enrolledCredits
+  }
+
+  public set enrolledCredits(value: number) {
+    this._enrolledCredits = value
+  }
+
+  public get subjects(): Array<Subject> {
+    return this._subjects
+  }
+
+  //#endregion
+
+  //#region Constructors
+
+  constructor() {
+    this._completedCredits = 0;
+    this._enrolledCredits = 0;
+    this._subjects = []
+  }
+
+  //#endregion
+
+  //#region Public Methods
+
+  public addNewSubject(subj: Subject): void {
+    this.subjects.push(subj)
+
+    //update credits
+    if (subj.status == 1) { //if the status is enrolled
+      this.enrolledCredits += subj.credit
+    }
+    else if (subj.status == 2) { //if the status is completed
+      this.enrolledCredits += subj.credit
+      this.completedCredits += subj.credit
+    }
+
+  }
+
+  public deleteSubject(index: number): void {
+    var subj = this.subjects.splice(index, 1)[0];
+
+    //update credits
+    if (subj.status == 1) { //if the status is enrolled
+      this.enrolledCredits -= subj.credit
+    }
+    else if (subj.status == 2) { //if the status is completed
+      this.enrolledCredits -= subj.credit
+      this.completedCredits -= subj.credit
+    }
+  }
+
+  //#endregion
 
 }
 
