@@ -8,7 +8,7 @@ import { AppComponent } from '../app.component';
   styleUrl: './subject.component.css'
 })
 export class SubjectComponent {
-  @Input('parentData') public box: any;
+  @Input('parentData') public box!: Subject;
 
   @Input('languageData') public languageIsHu: boolean;
 

@@ -1,14 +1,9 @@
-<div class="subject_box status{{box.status}} border{{box.border}}" (click)="statusChange()">
+<div *ngIf="{box}" class="subject_box border{{box.border}} status{{box.status}}" [ngClass]="box.status==0 && box.isAvailable ? 'status-available' : 'status{{box.status}}'" (click)="statusChange()">
     <div class="div_name">
         <p class="subject_name">{{box.name}} {{box.type}} </p>
     </div>
     <div class="div_credit">
         <p class="subject_credit"> {{box.credit}} kredit </p>
-    </div>
-    <div *ngIf="box.warning" class="warning_icon">
-        <span class="material-symbols-outlined">
-            warning
-        </span>
     </div>
     <div class="dropend" id="info">
         <div class="more_icon" click-stop-propagation data-bs-toggle="dropdown" aria-haspopup="true"
@@ -36,7 +31,7 @@
                     <span *ngIf="!languageIsHu" lang="en">Proposed semester:</span> 
                     {{box.proposedSemester}}
                     <br>
-                    <span *ngIf="languageIsHu" lang="hu">Előköv.:</span> 
+                    <span *ngIf="languageIsHu" lang="hu">Előfelt.:</span> 
                     <span *ngIf="!languageIsHu" lang="en">Prereq.:</span> 
                     {{showPre()}}
                     <br>

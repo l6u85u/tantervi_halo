@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { Subject } from '../app.component';
 
 import { SubjectComponent } from './subject.component';
 
@@ -14,6 +15,7 @@ describe('SubjectComponent', () => {
     
     fixture = TestBed.createComponent(SubjectComponent);
     component = fixture.componentInstance;
+    component.box = new Subject("IP-18PROGEG","Programozás",6,"",0,[],[],0,1,"obligatory","Informatika",false)
     fixture.detectChanges();
   });
 
