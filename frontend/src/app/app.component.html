@@ -113,6 +113,66 @@
           </ul>
         </div>
 
+        <div class="dropend" id="info">
+          <button class="more-info-curriculum" click-stop-propagation data-bs-toggle="dropdown" aria-haspopup="true"
+            aria-expanded="false">
+            <span class="material-symbols-outlined">
+              info
+            </span>
+          </button>
+          <div click-stop-propagation class="dropdown-menu info-subject">
+            <div>
+              <p class="info-title">
+                Kötelező teljesítések:
+              </p>
+              <div class="infoText">
+                <p *ngIf="curriculums[currentSpecIdx].compElectiveCreditsNeeded[1]==0">
+                  <span *ngIf="isLanguageHu" lang="hu">Kötelezően vál. tárgyak: </span>
+                  <span *ngIf="!isLanguageHu" lang="en">Comp. electives:</span>
+                  {{curriculums[currentSpecIdx].compElectiveCreditsInfo}}/{{curriculums[currentSpecIdx].compElectiveCreditsNeeded[0]}}
+                </p>
+                <p *ngIf="curriculums[currentSpecIdx].compElectiveCreditsNeeded[1]!=0">
+                  <span *ngIf="isLanguageHu" lang="hu">Kötelezően vál. tárgyak: </span>
+                  <span *ngIf="!isLanguageHu" lang="en">Comp. electives:</span>
+                  <br>
+                  <span *ngIf="isLanguageHu" lang="hu">Informatika ism.: </span>
+                  <span *ngIf="!isLanguageHu" lang="en">Informatics:</span>
+                  {{curriculums[currentSpecIdx].compElectiveCreditsInfo}}/{{curriculums[currentSpecIdx].compElectiveCreditsNeeded[0]}}
+                  <br>
+                  <span *ngIf="isLanguageHu" lang="hu">Számítástudomány ism.: </span>
+                  <span *ngIf="!isLanguageHu" lang="en">Comp. Science:</span>
+                  {{curriculums[currentSpecIdx].compElectiveCreditsCompScience}}/{{curriculums[currentSpecIdx].compElectiveCreditsNeeded[1]}}
+                </p>
+                <p>
+                  <span *ngIf="isLanguageHu" lang="hu">Szabadon vál. tárgyak: </span>
+                  <span *ngIf="!isLanguageHu" lang="en">Electives:</span>
+                  {{curriculums[currentSpecIdx].electiveCredits}}/10
+                </p>
+              </div>
+              <div class="infoText internship-text">
+                <div>
+                  <span *ngIf="isLanguageHu" lang="hu">
+                    Szakmai gyakorlat:
+                  </span>
+                  <span *ngIf="!isLanguageHu" lang="en">
+                    Internship:
+                  </span>
+                </div>
+                <div class="internship-icon">
+                  <span *ngIf="curriculums[currentSpecIdx].isInternshipCompleted" class="material-symbols-outlined"
+                    (click)="this.curriculums[currentSpecIdx].isInternshipCompleted=(!this.curriculums[currentSpecIdx].isInternshipCompleted)">
+                    check_small
+                  </span>
+                  <span *ngIf="!curriculums[currentSpecIdx].isInternshipCompleted" class="material-symbols-outlined"
+                    (click)="this.curriculums[currentSpecIdx].isInternshipCompleted=(!this.curriculums[currentSpecIdx].isInternshipCompleted)">
+                    close
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="operation_icons">
           <div class="btn-group dropend">
             <button class="add_columns_icon btn" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -190,8 +250,8 @@
                   </div>
                   <div class="mb-3">
                     <div class="subj_type">
-                      <label *ngIf="!(curriculums[currentSpecIdx].specLink=='angol')" lang="hu" class="radio-inline"><input type="radio" name="type" checked
-                          value="EA" [(ngModel)]="optionalSubjectsForm.type">
+                      <label *ngIf="!(curriculums[currentSpecIdx].isEnglish)" lang="hu" class="radio-inline"><input
+                          type="radio" name="type" checked value="EA" [(ngModel)]="optionalSubjectsForm.type">
                         <span *ngIf="isLanguageHu" lang="hu">
                           EA
                         </span>
@@ -199,8 +259,8 @@
                           L
                         </span>
                       </label>
-                      <label *ngIf="curriculums[currentSpecIdx].specLink=='angol'" lang="en" class="radio-inline"><input type="radio" name="type"
-                          checked value="L" [(ngModel)]="optionalSubjectsForm.type">
+                      <label *ngIf="curriculums[currentSpecIdx].isEnglish" lang="en" class="radio-inline"><input
+                          type="radio" name="type" checked value="L" [(ngModel)]="optionalSubjectsForm.type">
                         <span *ngIf="isLanguageHu" lang="hu">
                           EA
                         </span>
@@ -208,8 +268,8 @@
                           L
                         </span>
                       </label>
-                      <label *ngIf="!(curriculums[currentSpecIdx].specLink=='angol')" lang="hu" class="radio-inline"><input type="radio" name="type"
-                          value="GY" [(ngModel)]="optionalSubjectsForm.type">
+                      <label *ngIf="!(curriculums[currentSpecIdx].isEnglish)" lang="hu" class="radio-inline"><input
+                          type="radio" name="type" value="GY" [(ngModel)]="optionalSubjectsForm.type">
                         <span *ngIf="isLanguageHu" lang="hu">
                           GY
                         </span>
@@ -217,8 +277,8 @@
                           P
                         </span>
                       </label>
-                      <label *ngIf="curriculums[currentSpecIdx].specLink=='angol'" lang="en" class="radio-inline"><input type="radio" name="type"
-                          value="P" [(ngModel)]="optionalSubjectsForm.type">
+                      <label *ngIf="curriculums[currentSpecIdx].isEnglish" lang="en" class="radio-inline"><input
+                          type="radio" name="type" value="P" [(ngModel)]="optionalSubjectsForm.type">
                         <span *ngIf="isLanguageHu" lang="hu">
                           GY
                         </span>
@@ -248,7 +308,8 @@
                     </label>
                     <select class="form-control" id="semesterNumber" name="semester"
                       [(ngModel)]="optionalSubjectsForm.semester">
-                      <option *ngFor="let c of curriculums[currentSpecIdx].semesters; let i = index" value={{i}}>{{i+1}}</option>
+                      <option *ngFor="let c of curriculums[currentSpecIdx].semesters; let i = index" value={{i}}>{{i+1}}
+                      </option>
                     </select>
                   </div>
                 </div>
@@ -279,7 +340,8 @@
                     </label>
                     <select class="form-control" id="semesterNumber" name="semester"
                       [(ngModel)]="electiveSubjectsForm.semester">
-                      <option *ngFor="let c of curriculums[currentSpecIdx].semesters; let i = index" value={{i}}>{{i+1}}</option>
+                      <option *ngFor="let c of curriculums[currentSpecIdx].semesters; let i = index" value={{i}}>{{i+1}}
+                      </option>
                     </select>
                   </div>
                 </div>
@@ -341,21 +403,28 @@
             </div>
           </div>
           <div class="list-{{i}} subjects" cdkDropList (cdkDropListDropped)="drop($event,i)">
-            <app-subject class="subject_comp" *ngFor="let s of curriculums[currentSpecIdx].semesters[i].subjects; let j = index"
-              [parentData]="s" [languageData]="isLanguageHu" (notifyDeleteSubject)="showDeleteSubjectModal($event,i)"
+            <app-subject class="subject_comp"
+              *ngFor="let s of curriculums[currentSpecIdx].semesters[i].subjects; let j = index" [parentData]="s"
+              [languageData]="isLanguageHu" (notifyDeleteSubject)="showDeleteSubjectModal($event,i)"
               (notifyStatusChange)="clickEventHandler($event,i)" cdkDrag [cdkDragDisabled]="s.status!==0"
               click-stop-propagation>
             </app-subject>
           </div>
-          <div class="credits">
-            <p *ngIf="isLanguageHu" lang="hu">Felvett: {{curriculums[currentSpecIdx].semesters[i].enrolledCredits}}</p>
-            <p *ngIf="!isLanguageHu" lang="en">Enrolled: {{curriculums[currentSpecIdx].semesters[i].enrolledCredits}}</p>
-            <p *ngIf="isLanguageHu" lang="hu">Teljesített: {{curriculums[currentSpecIdx].semesters[i].completedCredits}}</p>
-            <p *ngIf="!isLanguageHu" lang="en">Completed: {{curriculums[currentSpecIdx].semesters[i].completedCredits}}</p>
-          </div>
-
         </div>
 
+      </div>
+      <div class="row flex-nowrap overflow-auto" cdkDropListGroup>
+        <div class="col" *ngFor="let c of curriculums[currentSpecIdx].semesters; let i = index">
+          <div class="credits">
+            <p *ngIf="isLanguageHu" lang="hu">Felvett: {{curriculums[currentSpecIdx].semesters[i].enrolledCredits}}</p>
+            <p *ngIf="!isLanguageHu" lang="en">Enrolled: {{curriculums[currentSpecIdx].semesters[i].enrolledCredits}}
+            </p>
+            <p *ngIf="isLanguageHu" lang="hu">Teljesített: {{curriculums[currentSpecIdx].semesters[i].completedCredits}}
+            </p>
+            <p *ngIf="!isLanguageHu" lang="en">Completed: {{curriculums[currentSpecIdx].semesters[i].completedCredits}}
+            </p>
+          </div>
+        </div>
       </div>
 
     </div>
@@ -427,43 +496,94 @@
       </div>
 
     </div>
-
-    <div class="action-buttons row">
-      <button class="col delete-forever-btn" data-bs-toggle="modal" data-bs-target="#deleteCurriculumModal" (click)="showResetCurriculumModal()">
-        <span class="material-symbols-outlined">
-          delete_forever
-        </span>
-        <p *ngIf="isLanguageHu" lang="hu">
-          Törlés
-        </p>
-        <p *ngIf="!isLanguageHu" lang="en">
-          Reset
-        </p>
-      </button>
-      <button class="col save-btn" (click)="saveCurriculumToFile()">
-        <span class="material-symbols-outlined">
-          save_as
-        </span>
-        <p *ngIf="isLanguageHu" lang="hu">
-          Mentés
-        </p>
-        <p *ngIf="!isLanguageHu" lang="en">
-          Save
-        </p>
-      </button>
-      <button class="col load-btn" (click)="fileUpload.click()">
-        <span class="material-symbols-outlined">
-          reopen_window
-        </span>
-        <p *ngIf="isLanguageHu" lang="hu">
-          Betöltés
-        </p>
-        <p *ngIf="!isLanguageHu" lang="en">
-          Load
-        </p>
-      </button>
+    <div class="cont-action container-fluid">
+      <div class="action-buttons row justify-content-center">
+        <div class="col">
+          <button class="delete-forever-btn" data-bs-toggle="modal" data-bs-target="#deleteCurriculumModal"
+            (click)="showResetCurriculumModal()">
+            <span class="material-symbols-outlined">
+              delete_forever
+            </span>
+            <p *ngIf="isLanguageHu" lang="hu">
+              Törlés
+            </p>
+            <p *ngIf="!isLanguageHu" lang="en">
+              Reset
+            </p>
+          </button>
+        </div>
+        <div class="dropend col">
+          <button class="save-btn" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <span class="material-symbols-outlined">
+              save_as
+            </span>
+            <p *ngIf="isLanguageHu" lang="hu">
+              Mentés
+            </p>
+            <p *ngIf="!isLanguageHu" lang="en">
+              Save
+            </p>
+          </button>
+          <ul class="dropdown-menu">
+            <li>
+              <button class="dropdown-item" (click)="saveCurriculumToFile()">
+                <span *ngIf="isLanguageHu" lang="hu">
+                  Fájlként
+                </span>
+                <span *ngIf="!isLanguageHu" lang="en">
+                  As a file
+                </span>
+              </button>
+            </li>
+            <li>
+              <button class="dropdown-item" (click)="saveCurriculumToStorage()">
+                <span *ngIf="isLanguageHu" lang="hu">
+                  Lokális böng. tárolóba
+                </span>
+                <span *ngIf="!isLanguageHu" lang="en">
+                  To the Local Storage
+                </span>
+              </button>
+            </li>
+          </ul>
+        </div>
+        <div class="dropend col">
+          <button class="col load-btn" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <span class="material-symbols-outlined">
+              reopen_window
+            </span>
+            <p *ngIf="isLanguageHu" lang="hu">
+              Betöltés
+            </p>
+            <p *ngIf="!isLanguageHu" lang="en">
+              Load
+            </p>
+          </button>
+          <ul class="dropdown-menu">
+            <li>
+              <button class="dropdown-item" (click)="fileUpload.click()">
+                <span *ngIf="isLanguageHu" lang="hu">
+                  Fájlból
+                </span>
+                <span *ngIf="!isLanguageHu" lang="en">
+                  From a file
+                </span>
+              </button>
+            </li>
+            <li>
+              <button class="dropdown-item" (click)="loadCurriculumFromLocalStorage()">
+                <span *ngIf="isLanguageHu" lang="hu">
+                  Lokális böng. tárolóból
+                </span>
+                <span *ngIf="!isLanguageHu" lang="en">
+                  From the Local Storage
+                </span>
+              </button>
+            </li>
+          </ul>
+        </div>
+      </div>
     </div>
-
   </div>
 
   <input type="file" accept=".txt" class="file-input" (change)="openFile($event)" #fileUpload>

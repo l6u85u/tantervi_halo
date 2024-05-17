@@ -81,8 +81,8 @@ class ExcelInputHandler:
         subject_list = json.loads(resp) #convert to python object
 
         #overlay subjects are added to each subjects based on the prerequisites
-        self.__prerequisit_handler(subject_list[0])
-        self.__prerequisit_handler(subject_list[1])
+        self.__prerequisite_handler(subject_list[0])
+        self.__prerequisite_handler(subject_list[1])
 
         return json.dumps(subject_list, ensure_ascii=False)
 
@@ -105,7 +105,7 @@ class ExcelInputHandler:
         subject_row_index = -1
         for row in ws.iter_rows(min_row=start_row_idx , max_col=2, max_row=ws.max_row):
             for cell in row:
-                if cell.value == start_cell:
+                if start_cell == cell.value:
                     subject_row_index = cell.row
                     break
             else:
@@ -134,7 +134,7 @@ class ExcelInputHandler:
 
         return first_subject_row_index - 1, empty_row_index - 2
 
-    def __rename_english_column_names(self, df):
+    def __refactor_english_curriculum_columns(self, df):
         if "Code" in df.columns:
             df = df.rename(columns={'Code': 'Kód'})
         if "Course" in df.columns:
@@ -156,13 +156,12 @@ class ExcelInputHandler:
         columns_to_keep = [col for col in df.columns if 'Semester' not in col]
         df = df[columns_to_keep]
         return df
-        
 
     def __get_json(self,start_row,number_of_rows, obligatory):
         try:
             #convert Excel to DataFrame
             df = pd.read_excel(self.__file_path, skiprows=start_row, nrows=number_of_rows, sheet_name=self.__sheet_index)
-            df = self.__rename_english_column_names(df)
+            df = self.__refactor_english_curriculum_columns(df)
 
             #remove the unnecesary columns from the DataFrame
             columns_to_keep = [col for col in df.columns if ('félév' not in col or 'Ajánlott' in col) and 'Unnamed' not in col]
@@ -172,7 +171,7 @@ class ExcelInputHandler:
             json_data = df.to_json(orient='records', force_ascii=False)
             json_list = json.loads(json_data)
         except Exception as e:
-            raise Exception("Error converting the Excel file to JSON: " + e)
+            raise Exception("Error converting the Excel file to JSON: " + str(e))
         
         self.__check_null_cells(df)
             
@@ -206,8 +205,7 @@ class ExcelInputHandler:
             if column!="Előfeltétel(ek)" and column!="Számonkérés" and column!="Practice Grade (PG)" and df[column].isnull().any():
                 raise Exception("Error: null cells in the " + column + " column")
 
-
-    def __prerequisit_handler(self,json_data):
+    def __prerequisite_handler(self,json_data):
         #adds a new attribute to the subjects which will contain the overlay subjects
         for data in json_data:
             data["Ráépülő"] = ""
@@ -218,7 +216,6 @@ class ExcelInputHandler:
         for data in json_data:
             if data["Ráépülő"].endswith(','):
                 data["Ráépülő"] = data["Ráépülő"][:-1]
-
 
     def __next_subject_adder(self,data, current_data, json_data):
         #recursively creates overlays for the subject by going through the prerequisites

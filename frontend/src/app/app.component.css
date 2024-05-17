@@ -39,8 +39,9 @@ h2 {
     background-color: #F4F4F4;
 }
 
-.subject_main>div {
-    height: 100%;
+.subject_main>div:first-of-type {
+    height: 92%;
+    margin-bottom: 2%;
 }
 
 .subject_main>div>div {
@@ -133,6 +134,64 @@ h2 {
     float: right;
     height: 26px;
 
+}
+
+.more-info-curriculum{
+    float: left;
+    padding-top: 7px;
+    padding-left: 10px;
+    background-color: transparent;
+    border: none;
+    height: 47px;
+}
+
+.info-title{
+    padding-left: 5px;
+    font-weight: bold;
+    font-size: 1em;
+    border-bottom: 1px solid;
+    margin-bottom: 0.5rem;
+}
+
+.internship-text{
+    font-size: 0.7em;
+    margin-left: 5px;
+    font-weight: bold;
+    display: table;
+    height: 18px;
+}
+
+.internship-text>div {
+    height: 18px;
+    margin-left: 5px;
+    padding-top: 5px;
+    vertical-align: middle;
+    display: table-cell;
+}
+
+.internship-icon>span {
+    margin-left: 5px;
+    margin-top: 2px;
+    font-size: 1em;
+    border: solid;
+}
+
+.more-info-curriculum>span{
+    font-size: 2em;
+}
+
+.infoText{
+    font-size: 0.7em;
+    margin-left: 5px;
+    margin-bottom: 0px;
+}
+
+.infoText>span{
+    font-weight: bold;
+}
+
+.info-subject{
+    width:200px;
 }
 
 #normal {
@@ -269,21 +328,29 @@ h2 {
     width: auto;
 }
 
+.cont-action{
+margin-top: 50px;
+}
+
 .action-buttons{
-    width:26%;
-    margin-left: 37%;
-    margin-top: 50px;
+    margin-left: 25%;
+    width: 50%;
     height:50px;
     text-align: center;
 }
 
-.action-buttons>button{
+.action-buttons>div>button{
+    width:100%;
+    height: 50px;
+}
+
+.action-buttons>div{
     background-color: transparent;
     height: 100%;
     border-style: none;
 }
 
-.action-buttons>.delete-forever-btn{
+.delete-forever-btn{
     border-radius: 12px;
     text-align: center;
     background-color: #fba4a4;
@@ -291,19 +358,18 @@ h2 {
     margin-right:15px;
 }
 
-.action-buttons>.save-btn{
+.save-btn{
     border-radius: 12px;
     text-align: center;
     background-color: #a5c0fb;
     line-height: 0.8;
 }
 
-.action-buttons>.load-btn{
+.load-btn{
     border-radius: 12px;
     text-align: center;
     background-color: #baf9b0;
     line-height: 0.8;
-    margin-left:15px;
 }
 
 .action-buttons>button>span{

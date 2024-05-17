@@ -69,6 +69,11 @@
           "defaultConfiguration": "production"
         },
         "serve": {
+          "options": {
+            "sslKey": "certificates/plan.inf.elte.hu.key",
+            "sslCert": "certificates/plan_inf_elte_hu_cert.cer",
+            "ssl": true
+          },
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {

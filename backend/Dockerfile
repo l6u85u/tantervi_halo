@@ -12,4 +12,4 @@ COPY . /app/
 
 RUN chmod a+x run.sh
 
-CMD cp certificates/localhost.pem . && cp certificates/localhost-key.pem . && sh -c '/app/run.sh'
+CMD cp certificates/plan.inf.elte.hu.key . && cp certificates/plan_inf_elte_hu_cert.cer . && sh -c '/app/run.sh'

@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Subject } from '../app.component';
+import { Subject } from '../subject';
 
 import { SubjectComponent } from './subject.component';
 
