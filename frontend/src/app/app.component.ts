@@ -8,14 +8,16 @@ import { Subject } from './subject';
 import { Curriculum } from './curriculum';
 import { LocalStorageService } from './local-storage.service';
 import { IStorage } from './i-storage';
+import { environment } from '../environments/environment';
+
 
 const PASSWORD: string = 'myPassword';
-const MAX_COLUMN_NUMBERS: number = 18;
+const MAX_COLUMN_NUMBERS: number = environment.maxNumberOfSemesters;
 const TITLE: string = 'frontend';
-const SPEC_NAMES: Array<string> = ["PTI Modellező", "PTI Tervező", "PTI Fejlesztő", "PTI Szoftvermérnök", "PTI Esti", "Computer Science"]
-const SPEC_LINKS: Array<string> = ["modellezo", "tervezo", "fejleszto", "szombathely", "esti", "angol"]
-const SPEC_COMP_INFO_CREDITS: Array<number> = [7,2,13,10,13,23]
-const SPEC_COMP_SCIENCE_CREDITS: Array<number> = [2,7,7,0,7,0]
+const SPEC_NAMES: Array<string> = environment.specNames
+const SPEC_LINKS: Array<string> = environment.specLinks
+const SPEC_COMP_INFO_CREDITS: Array<number> = environment.specCompInfoCredits
+const SPEC_COMP_SCIENCE_CREDITS: Array<number> = environment.specCompScienceCredits
 
 @Component({
   selector: 'app-root',
@@ -144,13 +146,12 @@ export class AppComponent {
     this._currentSpecIdx = 0;
 
   }
-
   //#endregion
 
   //#region Public Methods
 
   public getDarkModeText(): string {
-    if (this._isDarkMode) {
+    if (!this._isDarkMode) {
       return "Light"
     }
     return "Dark"
@@ -158,6 +159,10 @@ export class AppComponent {
 
   public changeLanguage() {
     this._isLanguageHu = !this._isLanguageHu
+  }
+
+  public changeDarkMode(){
+    this._isDarkMode = !this._isDarkMode
   }
 
   //handles the click event for a subject

@@ -1,12 +1,12 @@
-<div *ngIf="{box}" class="subject_box border{{box.border}} status{{box.status}}" [ngClass]="box.status==0 && box.isAvailable ? 'status-available' : 'status{{box.status}}'" (click)="statusChange()">
-    <div class="div_name">
-        <p class="subject_name">{{box.name}} {{box.type}} </p>
+<div *ngIf="{box}" class="subject-box border{{box.border}} status{{box.status}}" [ngClass]="box.status==0 && box.isAvailable ? 'status-available' : 'status{{box.status}}'" (click)="statusChange()">
+    <div class="div-name">
+        <p class="subject-name">{{box.name}} {{box.type}} </p>
     </div>
-    <div class="div_credit">
-        <p class="subject_credit"> {{box.credit}} kredit </p>
+    <div class="div-credit">
+        <p class="subject-credit"> {{box.credit}} kredit </p>
     </div>
     <div class="dropend" id="info">
-        <div class="more_icon" click-stop-propagation data-bs-toggle="dropdown" aria-haspopup="true"
+        <div class="more-icon" click-stop-propagation data-bs-toggle="dropdown" aria-haspopup="true"
             aria-expanded="false">
             <span class="material-symbols-outlined">
                 more_horiz
@@ -14,7 +14,7 @@
         </div>
         <div click-stop-propagation class="dropdown-menu info-subject">
             <div>
-                <p class="infoText"> 
+                <p class="info-text"> 
                     <span *ngIf="languageIsHu" lang="hu">Név:</span> 
                     <span *ngIf="!languageIsHu" lang="en">Name:</span>
                     {{box.name}} {{box.type}}
@@ -48,8 +48,27 @@
                     delete
                 </span>
             </button>
-
         </div>
+    </div>
+    <div *ngIf="box.status==0 && !box.isAvailable" class="status-icon" click-stop-propagation>
+        <span class="material-symbols-outlined">
+            block
+        </span>
+    </div>
+    <div *ngIf="box.status==0 && box.isAvailable" class="status-icon" click-stop-propagation>
+        <span class="material-symbols-outlined">
+            add_task
+        </span>
+    </div>
+    <div *ngIf="box.status==1" class="status-icon" click-stop-propagation>
+        <span class="material-symbols-outlined">
+            clock_loader_40
+        </span>
+    </div>
+    <div *ngIf="box.status==2" class="status-icon" click-stop-propagation>
+        <span class="material-symbols-outlined">
+            verified
+        </span>
     </div>
 
 </div>

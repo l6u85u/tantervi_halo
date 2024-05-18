@@ -1,10 +1,11 @@
 import { Semester } from "./semester"
 import { Subject } from "./subject"
 import { IStorage } from './i-storage';
+import { environment } from "../environments/environment";
 
-const BACKEND_ADDRESS: string = "https://127.0.0.1";
-const BACKEND_PORT: string = "8000";
-const NUMBER_OF_COLUMNS: number = 6
+const BACKEND_ADDRESS: string = environment.backendUrl
+const BACKEND_PORT: string = environment.backendPort
+const NUMBER_OF_COLUMNS: number = environment.numberOfSemesters
 
 export class Curriculum {
 

@@ -1,56 +1,101 @@
+header {
+    background-color: #049FA4;
+}
+
 header>div {
     width: 100%;
     height: 65px;
-    background-color: grey;
 }
 
 main {
-    width: 50%;
-    margin-left: 25%;
+    width: 70%;
+    margin-left: 15%;
     height: 1400px;
 }
 
 footer>div {
     width: 100%;
     height: 75px;
-    background-color: grey;
+    background-color: #049FA4;
+    color: white
 }
 
 h1 {
-    padding-top: 40px;
+    padding-top: 60px;
     text-align: center;
+    color: #002851;
 }
 
-h2 {
-    padding-top: 100px;
-}
-
-.subject_header {
+.instruction-title {
     margin-top: 80px;
-    border-style: solid;
-    height: 50px;
 }
 
-.subject_main {
+.instruction-title>a:hover {
+    background-color: #049FA4;
+    font-style: italic;
+}
+
+.instruction-text {
+    margin-top: 10px;
+}
+
+.instruction-title>a {
+    background-color: #002851;
+    border-color: #002851;
+}
+
+.subject-header {
+    border-bottom: solid;
+    height: 50px;
+    background-color: #002851;
+}
+
+.subject-manager {
+    margin-top: 50px;
     border-style: solid;
+    margin-bottom: 10px;
+}
+
+.subject-main {
     border-top: 0cm;
     height: 700px;
-    margin-bottom: 10px;
     background-color: #F4F4F4;
 }
 
-.subject_main>div:first-of-type {
-    height: 92%;
-    margin-bottom: 2%;
+.subject-main>div:first-of-type {
+    height: 640px;
+    margin-bottom: 15px;
 }
 
-.subject_main>div>div {
+.subject-main>div>div {
     height: 100%;
     min-width: 12.5%;
 }
 
-.subject_footer {
+.subject-credits {
+    background-color: #002851;
+    color: white;
+    height: 45px;
+    max-width: 100%;
+    margin: 0;
+}
+
+.subject-footer {
     height: 50px;
+}
+
+.spec-name {
+    background-color: #049FA4;
+    border-color: #049FA4;
+}
+
+.spec-name:hover {
+    font-style: italic;
+}
+
+.spec-item:hover {
+    background-color: #049FA4;
+    color: white;
 }
 
 .semester {
@@ -64,8 +109,7 @@ h2 {
 
 .credits {
     width: 100%;
-    height: 6%;
-
+    padding-top: 5px;
     font-size: 0.7em;
     font-weight: bold;
 }
@@ -75,20 +119,20 @@ h2 {
 }
 
 .progress-completed {
-    position:absolute;
+    position: absolute;
     height: 15px;
-    background-color: #75b86a;
+    background-color: #0288D1;
     z-index: 2;
 }
 
 .progress-enrolled {
-    position:absolute;
+    position: absolute;
     height: 15px;
-    background-color: #667de3;
+    background-color: #FFB300;
     z-index: 1;
 }
 
-.progress_bar {
+.progress-bar {
     height: 15px;
     line-height: 15px;
     width: 80%;
@@ -98,119 +142,164 @@ h2 {
     position: relative;
 }
 
-.progress_col {
-    padding-left: 0;
-    padding-right: 5px;
-    width: 40%;
+.progress-credits {
+    width: fit-content;
+    background-color: #002851;
+    color: white;
+    margin-right: 10px;
+    border-radius: 5px;
 }
 
-.progress_col>div {
+.progress-credits>span {
+    font-size: 0.8em;
+    font-weight: bold;
+}
+
+.progress-col {
+    padding-left: 0;
+    padding-right: 5px;
+    width: 70%;
+}
+
+.progress-col>div {
     float: left;
 }
 
-.progress_in_numbers {
+.progress-in-numbers {
     font-size: 0.7em;
     height: 15px;
-    padding-left: 0;
+    padding-left: 10px;
     width: 20%;
 }
 
-.color_desc {
-    text-align: center;
-    width: 50%;
+.color-desc {
+    padding-right: 0px;
+    width: 100%;
 }
 
-.color_desc>ul {
-    margin: 5px;
+.color-desc>ul {
+    float: right;
     margin-top: 0px;
 }
 
-.color_desc>ul>li {
+.color-desc>ul>li {
     display: inline-block;
     border-radius: 5px;
     padding: 5px;
     margin-right: 5px;
     font-size: 0.7em;
-    float: right;
     height: 26px;
-
 }
 
-.more-info-curriculum{
+.more-info-curriculum {
     float: left;
     padding-top: 7px;
     padding-left: 10px;
     background-color: transparent;
     border: none;
     height: 47px;
+    color: white;
 }
 
-.info-title{
+.info-title {
+    background-color: #049FA4;
+    color: white;
     padding-left: 5px;
     font-weight: bold;
-    font-size: 1em;
-    border-bottom: 1px solid;
+    font-size: 1.2em;
     margin-bottom: 0.5rem;
 }
 
-.internship-text{
-    font-size: 0.7em;
-    margin-left: 5px;
-    font-weight: bold;
-    display: table;
-    height: 18px;
-}
-
-.internship-text>div {
-    height: 18px;
-    margin-left: 5px;
-    padding-top: 5px;
-    vertical-align: middle;
-    display: table-cell;
+.elective-credits {
+    height: 30px;
 }
 
 .internship-icon>span {
-    margin-left: 5px;
-    margin-top: 2px;
     font-size: 1em;
     border: solid;
 }
 
-.more-info-curriculum>span{
+.more-info-curriculum>span {
     font-size: 2em;
 }
 
-.infoText{
-    font-size: 0.7em;
+.more-info-curriculum:hover>span {
+    font-weight: bold;
+}
+
+.info-text {
     margin-left: 5px;
     margin-bottom: 0px;
 }
 
-.infoText>span{
+.info-text>p {
+    margin: 0px;
+    font-size: 0.8em;
+
+}
+
+.ken-text {
+    margin-left: 30px;
+}
+
+.info-text>p>span:first-child {
+    font-size: 1.2em;
+}
+
+.info-text>span {
     font-weight: bold;
 }
 
-.info-subject{
-    width:200px;
+.info-subject {
+    width: 350px;
+    padding: 0;
+    border: 2px solid;
+}
+
+.delete-semester-icon:hover {
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.info-subject>div>div>.row:first-child {
+    font-size: 1em;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.info-subject>div>div>.row {
+    font-weight: normal;
+    height: 20px;
+    font-size: 0.8em;
+}
+
+.info-subject>div {
+    font-size: 1em;
+    font-weight: bold;
+    margin-bottom: 5px;
 }
 
 #normal {
     background-color: #a19f9f;
 }
 
+#available {
+    background-color: #8bc34a;
+}
+
 #inprogress {
-    background-color: #667de3;
+    background-color: #FFB300;
 }
 
 #completed {
-    background-color: #75b86a;
+    background-color: #0288D1;
 }
 
 #prerequisite {
     height: 26.8px;
     background-color: #a19f9f;
     border-style: solid;
-    border-width: 3px;
+    border-width: 2.5px;
     border-color: #e03b2f;
     padding: 2px;
 }
@@ -218,8 +307,8 @@ h2 {
 #overlay {
     background-color: #a19f9f;
     border-style: solid;
-    border-width: 3px;
-    border-color: #667de3;
+    border-width: 2.5px;
+    border-color: #0288D1;
     padding: 2px;
 }
 
@@ -243,12 +332,7 @@ h2 {
     transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
 }
 
-
-.subject-comp:last-child {
-    border: none;
-}
-
-.subject_comp {
+.subject-comp {
     display: flex;
     flex-direction: row;
 }
@@ -264,29 +348,29 @@ h2 {
     height: 100%;
 }
 
-.operation_icons {
+.operation-icons {
     width: 20%;
     height: 100%;
     float: right;
 }
 
-.operation_icons .btn {
+.operation-icons .btn {
     padding: 0;
     padding-top: 2px;
     width: 40%;
 }
 
-.operation_icons .btn:first-child {
+.operation-icons .btn:first-child {
     margin-left: 15%;
 }
 
-.operation_icons>div {
+.operation-icons>div {
     width: 50%;
 }
 
-.add_columns_icon {
-    background-color: white;
-    color: black;
+.add-columns-icon {
+    background-color: transparent;
+    color: white;
     border-style: none;
     width: 100%;
     height: 47px;
@@ -295,19 +379,24 @@ h2 {
     float: left;
 }
 
+.add-columns-icon:hover>span {
+    font-weight: bold;
+}
 
-.add_columns_icon>p {
+
+.add-columns-icon>p {
     font-size: 0.7em;
     width: 100%;
 }
 
-.add_columns_icon>span {
+.add-columns-icon>span {
     font-size: 2.2em;
     line-height: 0.8;
     width: 100%;
 }
 
-.semester>div>button {
+.semester>div>div {
+    margin-top: 15px;
     margin-top: 10px;
     height: 30px;
     border-style: none;
@@ -318,104 +407,142 @@ h2 {
     text-align: center;
 }
 
-.new_subject_form {
+.new-subject-form {
     width: 300px;
 }
 
-.subj_type>label {
+.subj-type>label {
     /*padding-right: 15px;*/
     margin-right: 15px;
     width: auto;
 }
 
-.cont-action{
-margin-top: 50px;
+.cont-action {
+    margin-top: 50px;
 }
 
-.action-buttons{
-    margin-left: 25%;
-    width: 50%;
-    height:50px;
+.action-buttons {
+    margin-left: 5px;
+    width: 100%;
+    margin-top: 100px;
+    width: 100%;
+    height: 50px;
     text-align: center;
 }
 
-.action-buttons>div>button{
-    width:100%;
+.action-buttons>div>button {
+    width: 100%;
     height: 50px;
 }
 
-.action-buttons>div{
+.action-buttons>div>button:hover {
+    background-color: black;
+    font-style: italic;
+}
+
+.action-buttons>div {
     background-color: transparent;
     height: 100%;
     border-style: none;
+    max-width: 150px;
 }
 
-.delete-forever-btn{
+.delete-forever-btn {
     border-radius: 12px;
     text-align: center;
-    background-color: #fba4a4;
-    line-height: 0.8;
-    margin-right:15px;
-}
-
-.save-btn{
-    border-radius: 12px;
-    text-align: center;
-    background-color: #a5c0fb;
+    background-color: #e60101;
+    color: white;
     line-height: 0.8;
 }
 
-.load-btn{
+.save-btn {
     border-radius: 12px;
     text-align: center;
-    background-color: #baf9b0;
+    background-color: #002851;
+    color: white;
     line-height: 0.8;
 }
 
-.action-buttons>button>span{
+.load-btn {
+    border-radius: 12px;
+    text-align: center;
+    background-color: #002851;
+    color: white;
+    line-height: 0.8;
+}
+
+.action-buttons>button>span {
     font-size: 2em;
 }
 
-.action-buttons>button>p{
+.action-buttons>button>p {
     font-size: 0.7em;
     font-weight: bold;
 }
 
 .file-input {
     display: none;
-  }
+}
 
-.footer-info{
-    padding-top:25px;
+.footer-info {
+    padding-top: 25px;
     text-align: center;
     font-weight: bold;
 }
 
-.header-logo{
-    float:left;
+.header-logo {
+    float: left;
 }
 
-.header-icons>button{
-    float:right;
+.header-icons>button {
+    float: right;
     background-color: transparent;
-    width:6%;
-    height:55px;
+    width: 6%;
+    height: 55px;
     text-align: center;
     line-height: 0.8;
     margin-top: 5px;
     border-style: none;
-    margin-right:2%;
-}
-.header-icons>button>span{
-    font-size:2.2em;
+    margin-right: 2%;
+    color: white;
 }
 
-.header-logo{
-    margin-left:20px;
-    height:65px;
+.header-icons>button>span {
+    font-size: 2.2em;
 }
 
-.header-logo>img {
+.header-icons>button:hover>span {
+    font-weight: bold;
+}
+
+.header-logo {
+    margin-left: 20px;
+    height: 65px;
+}
+
+.header-logo>a>img {
     height: 100%;
 }
-  
+
+.dark-mode {
+    background-color: #1c1c1c;
+}
+
+.dark-mode-text {
+    color: white;
+}
+
+.dark-mode-border {
+    border-color: white !important;
+    border-width: 1px;
+    border-style: solid;
+}
+
+.dark-mode-border-thicker {
+    border-color: white;
+    border-width: 2px;
+}
+
+.dark-mode-title {
+    background-color: #1c1c1c;
+}
