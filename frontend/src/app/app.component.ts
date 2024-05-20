@@ -381,7 +381,6 @@ export class AppComponent {
     var internship = this._curriculums[this._currentSpecIdx].isInternshipCompleted.toString()
 
     content = '{"' + this._currentSpecName + '":' + '{"subjects":' + content + ',"internship":' + internship + "}}"
-    console.log(content)
     content = CryptoJS.AES.encrypt(content, PASSWORD).toString(); //encrypt the content for safety reasons
 
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
@@ -419,12 +418,9 @@ export class AppComponent {
     var file = event.target.files[0]
     var reader = new FileReader();
     var content
-    console.log("HERE")
 
     reader.onload = () => {
-      console.log("HERE2")
       content = reader.result;
-      console.log(typeof (content))
       if (typeof (content) === "string") {
         try {
           content = CryptoJS.AES.decrypt(content, PASSWORD).toString(CryptoJS.enc.Utf8); //decrypt the content of the file
@@ -432,7 +428,6 @@ export class AppComponent {
           this.loadDataFromFile(content)
         }
         catch (error) {
-          console.log("HERE4")
           if (this._isLanguageHu) {
             swal({ text: "Hibás a fájl formátuma!", dangerMode: true })
           }
@@ -442,7 +437,6 @@ export class AppComponent {
         }
       }
     }
-    console.log("HERE#")
     reader.readAsText(file);
     event.target.value = "";
   }
