@@ -1,1 +1,1 @@
-python manage.py runserver_plus 0.0.0.0:8000 --cert-file plan.inf.elte.hu.key --key-file plan_inf_elte_hu_cert.cer
+python manage.py runserver_plus 0.0.0.0:8000 --cert-file plan_inf_elte_hu_cert.cer --key-file plan.inf.elte.hu.key
