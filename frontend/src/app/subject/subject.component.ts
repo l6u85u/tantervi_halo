@@ -12,14 +12,20 @@ export class SubjectComponent {
 
   @Input('languageData') public languageIsHu: boolean;
 
+  @Input('curriculumData') public isEnglish: boolean;
+
   @Output()
   notifyStatusChange: EventEmitter<Subject> = new EventEmitter<Subject>();
 
   @Output()
   notifyDeleteSubject: EventEmitter<Subject> = new EventEmitter<Subject>();
 
+  @Output()
+  notifyTypeChange: EventEmitter<Subject> = new EventEmitter<Subject>();
+
   constructor() {
     this.languageIsHu = true
+    this.isEnglish = false
   }
 
   public statusChange() {
@@ -28,6 +34,10 @@ export class SubjectComponent {
 
   public deleteSubject() {
     this.notifyDeleteSubject.emit(this.box)
+  }
+
+  public changeTypeOfSubject(){
+    this.notifyTypeChange.emit(this.box)
   }
 
   public showPre(): string {
@@ -52,6 +62,15 @@ export class SubjectComponent {
       else {
         return "Optional"
       }
+    }
+  }
+
+  public changeSubjectSpec(): void {
+    if (this.box.spec == "Kötelezően választható"){
+      this.box.spec = "Szabadon választható"
+    }
+    else if (this.box.spec == "Szabadon választható"){
+      this.box.spec = "Kötelezően választható"
     }
   }
 

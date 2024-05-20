@@ -45,8 +45,8 @@ export class AppComponent {
   private _currentSpecIdx: number;
 
   private _subjectToAddSpecType: string = "obligatory"
-  private _electiveSubjectsForm: Form = { code: "", name: "", type: "", semester: -1, credit: 0 }
-  private _optionalSubjectsForm: Form = { code: "", name: "", type: "", semester: -1, credit: 0 }
+  private _electiveSubjectsForm: Form = { code: "", name: "", type: "", semester: -1, credit: 0, ken:""}
+  private _optionalSubjectsForm: Form = { code: "", name: "", type: "", semester: -1, credit: 0, ken: ""}
   private _optionalSubjectsFormMessage: string = ""
 
   private _storage: IStorage
@@ -191,6 +191,12 @@ export class AppComponent {
 
   }
 
+  //handles the type change event of a subject
+  public changeTypeEventHandler(subj: Subject, idx: number): void {
+    //the list of prerequisites which are not completed
+    this.curriculums[this._currentSpecIdx].changeSubjectSpec(subj)
+  }
+
   //handles the drop event of a subject
   public drop(event: CdkDragDrop<string[]>, index: number) {
 
@@ -263,13 +269,19 @@ export class AppComponent {
           }
           return
         }
-        var subj: Subject = new Subject(resp.code, resp.name, resp.credit, resp.type, 0, [], [], 0, 0, "Szabadon választható", "Egyéb")
+
+        if (resp.ken==""){
+          resp.ken="Egyéb"
+        }
+
+        var subj: Subject = new Subject(resp.code, resp.name, resp.credit, resp.type, 0, [], [], 0, 0, "Szabadon választható", resp.ken)
         this.curriculums[this._currentSpecIdx].semesters[resp.semester].addNewSubject(subj)
 
         this._optionalSubjectsForm.name = ""
         this._optionalSubjectsForm.code = ""
         this._optionalSubjectsForm.credit = 0
         this._optionalSubjectsForm.type = ""
+        this._optionalSubjectsForm.ken = ""
         this._optionalSubjectsForm.semester = -1
       }
     }
@@ -399,7 +411,6 @@ export class AppComponent {
 
   //reset the state of the curriculum to the initial state of the spec
   public resetCurriculum() {
-    this._storage.remove(this.currentSpecName)
     this.curriculums[this._currentSpecIdx] = new Curriculum(this._storage, SPEC_NAMES[this._currentSpecIdx], SPEC_LINKS[this._currentSpecIdx], SPEC_COMP_INFO_CREDITS[this.currentSpecIdx], SPEC_COMP_SCIENCE_CREDITS[this._currentSpecIdx])
   }
 
@@ -586,6 +597,7 @@ export type Form = {
   code: string;
   name: string;
   type: string;
+  ken: string;
   credit: number;
   semester: number;
 }

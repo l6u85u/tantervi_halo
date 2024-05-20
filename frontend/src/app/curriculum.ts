@@ -120,27 +120,17 @@ export class Curriculum {
 
         this._xhttp = new XMLHttpRequest();
 
-        var storedCurriculum = storage.get(specName)
-        console.log(storedCurriculum)
-        
-        if (storedCurriculum) {
-            var resp = JSON.parse(storedCurriculum)
-            this.getSubjects(resp.subjects, resp.internship)
-        }
-        else {
-            console.log("Here")
-            //get the data from the backend with XMLHttpRequest
-            this._xhttp.open('GET', BACKEND_ADDRESS + ":" + BACKEND_PORT + "/" + specLink, true)
-            this._xhttp.onreadystatechange = () => this.getData();
-            this._xhttp.send();
-        }
+        //get the data from the backend with XMLHttpRequest
+        this._xhttp.open('GET', BACKEND_ADDRESS + ":" + BACKEND_PORT + "/" + specLink, true)
+        this._xhttp.onreadystatechange = () => this.getData();
+        this._xhttp.send();
     }
 
     //#endregion
 
     //#region Public Methods
 
-    //handles the click event for a subject
+    //changes the status of a subject, example: enrolled -> completed
     public changeSubjectStatus(subj: Subject, idx: number): string[] {
         var enrolled;
         var completed;
@@ -177,6 +167,39 @@ export class Curriculum {
         this.updateSubjectCredits([enrolled, completed], idx, subj.spec, subj.ken) //update credits
 
         return []
+    }
+
+    //changes the type of a subject, example: electve -> comp. elective
+    public changeSubjectSpec(subj: Subject): void {
+        //update the completed compulsory elective and elective credits
+        if (subj.status == 2) {  //completed status
+            if (subj.spec == "Kötelezően választható") {
+                if (subj.ken == "Informatika") {
+                    this._compElectiveCreditsInfo -= subj.credit
+                }
+                else if (subj.ken == "Számítástudomány") {
+                    this._compElectiveCreditsCompScience -= subj.credit
+                }
+                this._electiveCredits += subj.credit
+            }
+            else {
+                this._electiveCredits -= subj.credit
+                if (subj.ken == "Informatika") {
+                    this._compElectiveCreditsInfo += subj.credit
+                }
+                else if (subj.ken == "Számítástudomány") {
+                    this._compElectiveCreditsCompScience += subj.credit
+                }
+            }
+        }
+
+        //change the type
+        if (subj.spec == "Kötelezően választható") {
+            subj.spec = "Szabadon választható"
+        }
+        else if (subj.spec == "Szabadon választható") {
+            subj.spec = "Kötelezően választható"
+        }
     }
 
     //updates the subject which is currently chosen
@@ -389,7 +412,7 @@ export class Curriculum {
         this._completedCreditsPerc = this._completedCredits / 18 * 10 + "%"
         this._enrolledCreditsPerc = this._enrolledCredits / 18 * 10 + "%"
 
-        if (internship){
+        if (internship) {
             this.isInternshipCompleted = true
         }
         else {

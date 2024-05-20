@@ -2,7 +2,10 @@
   <header>
     <div class="row">
       <div class="col header-logo">
-        <a href="https://www.inf.elte.hu/" target="_blank"><img src="./assets/elte.png" alt="ELTE logo"></a>
+        <a *ngIf="isLanguageHu" href="https://www.inf.elte.hu/" target="_blank"><img src="./assets/elte.png"
+            alt="ELTE logo"></a>
+        <a *ngIf="!isLanguageHu" href="https://www.inf.elte.hu/en/" target="_blank"><img src="./assets/elte.png"
+            alt="ELTE logo"></a>
       </div>
       <div class="col header-icons">
         <button (click)="changeDarkMode()">
@@ -39,12 +42,12 @@
             <h1 class="modal-title fs-5" id="deleteSubjectModalLabel">{{modalTitleText}}</h1>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
-          <div class="modal-body">
+          <div class="modal-body border-0">
             {{modalBodyText}}
           </div>
-          <div class="modal-footer">
+          <div class="modal-footer border-0">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{modalSecondButtonText}}</button>
-            <button type="button" class="btn btn-primary" data-bs-dismiss="modal"
+            <button type="button" class="btn btn-primary custom-modal-button" data-bs-dismiss="modal"
               (click)="deleteSubject()">{{modalFirstButtonText}}</button>
           </div>
         </div>
@@ -54,16 +57,16 @@
       aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-          <div class="modal-header">
+          <div class="modal-header border-0">
             <h1 class="modal-title fs-5" id="deleteCurriculumModalLabel">{{modalTitleText}}</h1>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
-          <div class="modal-body">
+          <div class="modal-body border-0">
             {{modalBodyText}}
           </div>
-          <div class="modal-footer">
+          <div class="modal-footer border-0">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{modalSecondButtonText}}</button>
-            <button type="button" class="btn btn-primary" data-bs-dismiss="modal"
+            <button type="button" class="btn btn-primary custom-modal-button" data-bs-dismiss="modal"
               (click)="resetCurriculum()">{{modalFirstButtonText}}</button>
           </div>
         </div>
@@ -91,17 +94,207 @@
             Instructions
           </a>
         </div>
-        <div class="collapse instruction-text" id="collapseInstructions">
-          <p *ngIf="isLanguageHu" lang="hu" [ngClass]="isDarkMode ? 'dark-mode-text': ''">
-            Az oldal célja, hogy a hallgatókat segítse a tárgyak egymásraépülésének interatkív ábrázolásával. Az oldalon
-            lehetőség van a már teljesített tárgyak, a hallgató számára aktuálisan felvehető tárgyak és a függőségek
-            megjelenítésére.
+        <div class="collapse instruction-text" id="collapseInstructions" lang="hu">
+          <p class="warning">
+            <span class="material-symbols-outlined align-middle">
+              warning
+            </span>
+            <span class="align-middle" *ngIf="isLanguageHu">
+              Figyelem!
+            </span>
+            <span class="align-middle" *ngIf="!isLanguageHu">
+              Attention!
+            </span>
           </p>
-          <p *ngIf="!isLanguageHu" lang="en" [ngClass]="isDarkMode ? 'dark-mode-text': ''">
-            The purpose of the website is to assist students in visualizing the interdependency of subjects.
+          <p *ngIf="isLanguageHu">Az itt található információk nem hivatalosak, bármilyen tanulmányi ügyben nem minősül
+            hivatkozási alapnak.
+            A tantervi hálóban található, vagy a háló értelmezéséből eredő hibák miatt felelősséget nem vállalunk!
+            Minden esetben ellenőrizd a <a href="https://neptun.elte.hu/" target="_blank"> Neptunban</a> a tárgyak
+            előfeltételét és a <a href="https://www.inf.elte.hu/aktualis-tantervi-halok" target="_blank"> Tanulmányi
+              Osztály</a> hirdetményeit!</p>
+          <p *ngIf="!isLanguageHu">The information provided here is unofficial and should not be used as a reference
+            for any academic matters. We do not take responsibility for any errors that may arise from the
+            missinterpretation
+            of the curriculum network found here! Always check the prerequisites for courses in <a
+              href="https://neptun.elte.hu/" target="_blank">
+              Neptun</a> and the announcements from the <a href="https://www.elte.hu/en/computer-science-bsc"
+              target="_blank"> Academic Registrars Department</a>.</p>
+          <p *ngIf="isLanguageHu">Az oldal célja, hogy a hallgatókat segítse a tárgyak egymásra épülésének interaktív
+            ábrázolásával. Az
+            oldalon lehetőség van a már teljesített tárgyak, a hallgató számára aktuálisan felvehető tárgyak és a
+            függőségek megjelenítésére.</p>
+          <p *ngIf="!isLanguageHu"> The purpose of the website is to assist students in visualizing the interdependency
+            of subjects.
             The site displays the completed subjects, currently available subjects to enroll in and their
-            dependencies.
-          </p>
+            dependencies.</p>
+          <p class="actions-info" *ngIf="isLanguageHu">A következő tantervvel kapcsolatos műveletekre nyújt lehetőséget
+            az oldal:</p>
+          <p class="actions-info" *ngIf="!isLanguageHu">The following operations related to the curriculum are available
+            on the page:</p>
+          <ul>
+            <li> <span class="material-symbols-outlined align-middle">
+                change_circle
+              </span>
+              <span class="align-middle" *ngIf="isLanguageHu">
+                - a tárgyak állapotának változtatása: a tárgy dobozára való kattintással/koppintással. Az állapotok:
+              </span>
+              <span class="align-middle" *ngIf="!isLanguageHu">
+                - Changing the status of courses: by clicking/tapping on the course box. The statuses are:
+              </span>
+              <ul class="li-status">
+                <li>
+                  <span class="material-symbols-outlined align-middle not-enrolled-info">
+                    block
+                  </span>
+                  <span class="align-middle" *ngIf="isLanguageHu">
+                    - nem felvett: nem lehet felvenni az előfeltételek miatt
+                  </span>
+                  <span class="align-middle" *ngIf="!isLanguageHu">
+                    - not enrolled: cannot be taken due to prerequisites
+                  </span>
+                </li>
+                <li>
+                  <span class="material-symbols-outlined align-middle available-info">
+                    add_task
+                  </span>
+                  <span class="align-middle" *ngIf="isLanguageHu">
+                    - elérhető: fel lehet venni, mert minden előfeltétel teljesült
+                  </span>
+                  <span class="align-middle" *ngIf="!isLanguageHu">
+                    - available: can be taken as all prerequisites are fulfilled
+                  </span>
+                </li>
+                <li>
+                  <span class="material-symbols-outlined align-middle enrolled-info">
+                    clock_loader_40
+                  </span>
+                  <span class="align-middle" *ngIf="isLanguageHu">
+                    - felvett: a tárgy teljesítése folyamatban van
+                  </span>
+                  <span class="align-middle" *ngIf="!isLanguageHu">
+                    - enrolled: the course is currently being taken
+                  </span>
+                </li>
+                <li>
+                  <span class="material-symbols-outlined align-middle completed-info">
+                    verified
+                  </span>
+                  <span class="align-middle" *ngIf="isLanguageHu">
+                    - teljesített: a tárgyat elvégezte a hallgató
+                  </span>
+                  <span class="align-middle" *ngIf="!isLanguageHu">
+                    - completed: the course has been completed by the student
+                  </span>
+                </li>
+              </ul>
+            </li>
+            <li>
+              <span class="material-symbols-outlined align-middle">
+                drag_pan
+              </span>
+              <span class="align-middle" *ngIf="isLanguageHu">
+                - tárgyak mozgatása egy másik félévbe: a tárgy dobozának áthúzása egy másik oszlopba (drag and drop)
+              </span>
+              <span class="align-middle" *ngIf="!isLanguageHu">
+                - moving courses to another semester: by dragging and dropping the course box to another column
+              </span>
+            </li>
+            <li>
+              <span class="material-symbols-outlined align-middle">
+                more_horiz
+              </span>
+              <span class="align-middle" *ngIf="isLanguageHu">
+                - több információ egy adott tárggyal kapcsolatban
+              </span>
+              <span class="align-middle" *ngIf="!isLanguageHu">
+                - more information about a specific course
+              </span>
+            </li>
+            <li>
+              <span class="material-symbols-outlined align-middle">
+                add_circle
+              </span>
+              <span class="align-middle">
+                |
+              </span>
+              <span class="material-symbols-outlined align-middle">
+                delete_forever
+              </span>
+              <span class="align-middle" *ngIf="isLanguageHu">
+                - kötelezően választható és szabadon választható tárgyak felvétele és törlése
+              </span>
+              <span class="align-middle" *ngIf="!isLanguageHu">
+                - adding and removing compulsory elective and elective courses
+              </span>
+            </li>
+            <li>
+              <span class="material-symbols-outlined align-middle">
+                add_box
+              </span>
+              <span class="align-middle">
+                |
+              </span>
+              <span class="material-symbols-outlined align-middle">
+                delete_forever
+              </span>
+              <span class="align-middle" *ngIf="isLanguageHu">
+                - félévek hozzáadása és törlése
+              </span>
+              <span class="align-middle" *ngIf="!isLanguageHu">
+                - adding and deleting semesters
+              </span>
+            </li>
+            <li>
+              <span class="material-symbols-outlined align-middle">
+                swap_horiz
+              </span>
+              <span class="align-middle" *ngIf="isLanguageHu">
+                - kötelezően választható tárgy áthelyezése szabadon választhatóba és fordítva
+              </span>
+              <span class="align-middle" *ngIf="!isLanguageHu">
+                - switch from compulsory elective to elective and vice versa
+              </span>
+            </li>
+            <li>
+              <span class="material-symbols-outlined align-middle">
+                info
+              </span>
+              <span class="align-middle">
+                ->
+              </span>
+              <span class="material-symbols-outlined align-middle internship-icon-info">
+                check_small
+              </span>
+              <span class="align-middle" *ngIf="isLanguageHu">
+                - szakmai gyakorlat elvégzésének jelölése
+              </span>
+              <span class="align-middle" *ngIf="!isLanguageHu">
+                - indicating the completion of internship
+              </span>
+            </li>
+            <li>
+              <span class="material-symbols-outlined align-middle">
+                info
+              </span>
+              <span class="align-middle" *ngIf="isLanguageHu">
+                - több információ az aktuális tantervvel kapcsolatban
+              </span>
+              <span class="align-middle" *ngIf="!isLanguageHu">
+                - more information about the curriculum
+              </span>
+            </li>
+            <li>
+              <span class="material-symbols-outlined align-middle">
+                swap_horizontal_circle
+              </span>
+              <span class="align-middle" *ngIf="isLanguageHu">
+                - tanterv váltása
+              </span>
+              <span class="align-middle" *ngIf="!isLanguageHu">
+                - changing the curriculum
+              </span>
+            </li>
+          </ul>
         </div>
       </div>
       <div class="subject-manager" [ngClass]="isDarkMode ? 'dark-mode-border-thicker': ''">
@@ -117,7 +310,7 @@
               </li>
             </ul>
           </div>
-          <div class="dropend" id="info">
+          <div id="info" class="dropend">
             <button class="more-info-curriculum" click-stop-propagation data-bs-toggle="dropdown" aria-haspopup="true"
               aria-expanded="false">
               <span class="material-symbols-outlined">
@@ -162,7 +355,9 @@
                 <div class="col">
                   <div class="row">
                     <p>
-                      {{curriculums[currentSpecIdx].compElectiveCreditsInfo + curriculums[currentSpecIdx].compElectiveCreditsCompScience}}/{{curriculums[currentSpecIdx].compElectiveCreditsNeeded[0] + curriculums[currentSpecIdx].compElectiveCreditsNeeded[1]}}
+                      {{curriculums[currentSpecIdx].compElectiveCreditsInfo +
+                      curriculums[currentSpecIdx].compElectiveCreditsCompScience}}/{{curriculums[currentSpecIdx].compElectiveCreditsNeeded[0]
+                      + curriculums[currentSpecIdx].compElectiveCreditsNeeded[1]}}
                     </p>
                   </div>
                   <div class="row" *ngIf="curriculums[currentSpecIdx].compElectiveCreditsNeeded[1]!=0">
@@ -226,10 +421,10 @@
                 <span class="material-symbols-outlined">
                   add_circle
                 </span>
-                <p *ngIf="isLanguageHu" lang="hu">
+                <p *ngIf="isLanguageHu" class="hide" lang="hu">
                   Tárgy felv.
                 </p>
-                <p *ngIf="!isLanguageHu" lang="en">
+                <p *ngIf="!isLanguageHu" class="hide" lang="en">
                   Add subject
                 </p>
               </button>
@@ -280,7 +475,7 @@
                           Name
                         </span>
                       </label>
-                      <input type="text" class="form-control" id="name" placeholder="Programozás" name="name"
+                      <input type="text" class="form-control" id="name" name="name"
                         [(ngModel)]="optionalSubjectsForm.name">
                       <p id="name-warning"> </p>
                     </div>
@@ -361,6 +556,21 @@
                         </option>
                       </select>
                     </div>
+                    <div class="mb-3" *ngIf="!curriculums[currentSpecIdx].isEnglish">
+                      <label for="ken" class="form-label">
+                        <span *ngIf="isLanguageHu" lang="hu">
+                          Ismeretkör
+                        </span>
+                        <span *ngIf="!isLanguageHu" lang="en">
+                          Competence
+                        </span>
+                      </label>
+                      <input *ngIf="isLanguageHu" type="text" class="form-control" placeholder="Informatika" id="ken"
+                        name="ken" [(ngModel)]="optionalSubjectsForm.ken">
+                      <input *ngIf="!isLanguageHu" type="text" placeholder="Informatics" class="form-control" id="ken"
+                        name="ken" [(ngModel)]="optionalSubjectsForm.ken">
+                      <p id="name-warning"> </p>
+                    </div>
                   </div>
                   <div *ngIf="subjectToAddSpecType=='obligatory'">
                     <div class="mb-3">
@@ -413,10 +623,10 @@
               <span class="material-symbols-outlined">
                 add_box
               </span>
-              <p *ngIf="isLanguageHu" lang="hu">
+              <p *ngIf="isLanguageHu" class="hide" lang="hu">
                 Félév felv.
               </p>
-              <p *ngIf="!isLanguageHu" lang="en">
+              <p *ngIf="!isLanguageHu" class="hide" lang="en">
                 Add semester
               </p>
             </button>
@@ -444,17 +654,20 @@
               <div class="list-{{i}} subjects" cdkDropList (cdkDropListDropped)="drop($event,i)">
                 <app-subject class="subject-comp"
                   *ngFor="let s of curriculums[currentSpecIdx].semesters[i].subjects; let j = index" [parentData]="s"
-                  [languageData]="isLanguageHu" (notifyDeleteSubject)="showDeleteSubjectModal($event,i)"
-                  (notifyStatusChange)="clickEventHandler($event,i)" cdkDrag [cdkDragDisabled]="s.status!==0"
+                  [languageData]="isLanguageHu" [curriculumData]="curriculums[currentSpecIdx].isEnglish"
+                  (notifyDeleteSubject)="showDeleteSubjectModal($event,i)"
+                  (notifyStatusChange)="clickEventHandler($event,i)"
+                  (notifyTypeChange)="changeTypeEventHandler($event,i)" cdkDrag [cdkDragDisabled]="s.status!==0"
                   click-stop-propagation>
                 </app-subject>
               </div>
             </div>
           </div>
-          <div class="row flex-nowrap overflow-auto subject-credits" cdkDropListGroup>
+          <div class="row flex-nowrap subject-credits overflow-auto" cdkDropListGroup>
             <div class="col" *ngFor="let c of curriculums[currentSpecIdx].semesters; let i = index">
               <div class="credits">
-                <p *ngIf="isLanguageHu" lang="hu">Felvett: {{curriculums[currentSpecIdx].semesters[i].enrolledCredits}}
+                <p *ngIf="isLanguageHu" lang="hu">Felvett:
+                  {{curriculums[currentSpecIdx].semesters[i].enrolledCredits}}
                 </p>
                 <p *ngIf="!isLanguageHu" lang="en">Enrolled:
                   {{curriculums[currentSpecIdx].semesters[i].enrolledCredits}}
@@ -581,7 +794,7 @@
                 Save
               </p>
             </button>
-            <ul class="dropdown-menu">
+            <ul class="dropdown-menu action-options">
               <li>
                 <button class="dropdown-item" (click)="saveCurriculumToFile()">
                   <span *ngIf="isLanguageHu" lang="hu">
@@ -617,7 +830,7 @@
                 Load
               </p>
             </button>
-            <ul class="dropdown-menu">
+            <ul class="dropdown-menu action-options">
               <li>
                 <button class="dropdown-item" (click)="fileUpload.click()">
                   <span *ngIf="isLanguageHu" lang="hu">

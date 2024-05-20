@@ -10,7 +10,6 @@ header>div {
 main {
     width: 70%;
     margin-left: 15%;
-    height: 1400px;
 }
 
 footer>div {
@@ -36,7 +35,13 @@ h1 {
 }
 
 .instruction-text {
-    margin-top: 10px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    margin-top: 30px;
+    max-width: 800px;
+    padding-left: 20px;
+    border: dashed;
+    background-color: #F4F4F4;
 }
 
 .instruction-title>a {
@@ -67,17 +72,27 @@ h1 {
     margin-bottom: 15px;
 }
 
+.subject-main>div {
+    max-width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+}
+
 .subject-main>div>div {
     height: 100%;
-    min-width: 12.5%;
+    min-width: 12.8%;
 }
 
 .subject-credits {
     background-color: #002851;
     color: white;
     height: 45px;
-    max-width: 100%;
+    width: 100%;
     margin: 0;
+}
+
+.subject-credits>div {
+    background-color: #002851;
 }
 
 .subject-footer {
@@ -219,6 +234,11 @@ h1 {
     border: solid;
 }
 
+.internship-icon-info {
+    border: solid;
+    font-size: 1em;
+}
+
 .more-info-curriculum>span {
     font-size: 2em;
 }
@@ -349,6 +369,7 @@ h1 {
 }
 
 .operation-icons {
+    max-width: 200px;
     width: 20%;
     height: 100%;
     float: right;
@@ -423,6 +444,7 @@ h1 {
 
 .action-buttons {
     margin-left: 5px;
+    margin-bottom: 200px;
     width: 100%;
     margin-top: 100px;
     width: 100%;
@@ -498,6 +520,7 @@ h1 {
     float: right;
     background-color: transparent;
     width: 6%;
+    min-width: 50px;
     height: 55px;
     text-align: center;
     line-height: 0.8;
@@ -529,7 +552,7 @@ h1 {
 }
 
 .dark-mode-text {
-    color: white;
+    color: white !important;
 }
 
 .dark-mode-border {
@@ -545,4 +568,255 @@ h1 {
 
 .dark-mode-title {
     background-color: #1c1c1c;
+}
+
+.warning {
+    margin-bottom: 0px;
+    font-weight: bold;
+    font-size: 1.2em;
+
+}
+
+.warning>span:first-child {
+    color: orange;
+    font-weight: bold;
+}
+
+.actions-info {
+    margin-bottom: 0px;
+    font-weight: bold;
+}
+
+.instruction-text>p>a {
+    color: black;
+    text-decoration: underline;
+}
+
+.instruction-text>p>a:hover {
+    font-style: italic;
+    color: black;
+    text-decoration: underline;
+}
+
+ul {
+    list-style-type: none;
+}
+
+.not-enrolled-info {
+    color: #a19f9f;
+}
+
+.available-info {
+    color: #8bc34a;
+}
+
+.enrolled-info {
+    color: #FFB300;
+}
+
+.completed-info {
+    color: #0288D1;
+}
+
+.action-options {
+    border: 1px solid;
+}
+
+.action-options>li>button:hover {
+    background-color:#002851;
+    color:white;
+}
+
+.custom-modal-button{
+    background-color: #7cd1f9;
+    border-color: grey;
+    border-style: double;
+}
+
+.custom-modal-button:hover{
+    background-color: #73bfe6;
+}
+
+@media only screen and (max-width: 480px) {
+    .subject-main>div>div {
+        min-width: 50%;
+    }
+
+    main {
+        width: 90%;
+        margin-left: 5%;
+    }
+
+    .hide {
+        display: none;
+    }
+
+    .operation-icons {
+        width: 30%;
+    }
+
+    .color-desc>ul>li {
+        font-size: 0.4em;
+    }
+
+    .progress-credits {
+        display: none;
+    }
+
+    .progress-in-numbers {
+        display: none;
+    }
+
+    .progress-col {
+        width: 100%;
+        padding-right: 0px;
+    }
+
+    .progress-bar {
+        width: 100%;
+    }
+
+    div:has(> .progress-col) {
+        margin: 0;
+        padding: 0;
+    }
+
+    .action-buttons>div {
+        max-width: 100px;
+    }
+
+    .action-buttons>div>button>span {
+        font-size: 1.4em;
+    }
+
+    .action-buttons>div>button>p {
+        font-size: 0.8em;
+    }
+
+    .instruction-text {
+        font-size: 0.7em;
+        padding-right: 5px;
+        padding-left: 5px;
+    }
+
+    .info-title {
+        font-size: 1em;
+        margin-bottom: 0.2rem;
+    }
+
+
+    .info-subject>div>div>.row {
+        font-size: 0.8em;
+    }
+
+    .info-subject>div {
+        font-size: 0.6em;
+    }
+
+    .info-subject {
+        width: 200px;
+    }
+}
+
+
+@media only screen and (min-width:480px) and (max-width: 768px) {
+    .subject-main>div>div {
+        min-width: 33%;
+    }
+
+    main {
+        width: 90%;
+        margin-left: 5%;
+    }
+
+    .hide {
+        display: none;
+    }
+
+    .operation-icons {
+        width: 30%;
+    }
+
+    .color-desc>ul>li {
+        font-size: 0.4em;
+    }
+
+    .progress-credits {
+        display: none;
+    }
+
+    .progress-in-numbers {
+        display: none;
+    }
+
+    .progress-col {
+        width: 100%;
+        padding-right: 0px;
+    }
+
+    .progress-bar {
+        width: 100%;
+    }
+
+    div:has(> .progress-col) {
+        margin: 0;
+        padding: 0;
+    }
+
+    .action-buttons>div {
+        max-width: 100px;
+    }
+
+    .action-buttons>div>button>span {
+        font-size: 1.4em;
+    }
+
+    .action-buttons>div>button>p {
+        font-size: 0.8em;
+    }
+
+    .instruction-text {
+        font-size: 0.7em;
+        padding-right: 5px;
+    }
+}
+
+@media only screen and (min-width:768px) and (max-width: 1150px) {
+    .subject-main>div>div {
+        min-width: 25%;
+    }
+
+    main {
+        width: 80%;
+        margin-left: 10%;
+    }
+
+    .hide {
+        display: none;
+    }
+
+    .operation-icons {
+        width: 30%;
+    }
+
+    div:has(> .progress-col) {
+        margin: 0;
+        padding: 0;
+    }
+
+    .action-buttons>div {
+        max-width: 120px;
+    }
+
+    .instruction-text {
+        font-size: 0.7em;
+        padding-right: 5px;
+    }
+}
+
+@media only screen and (min-width:1150px) and (max-width: 1280px) {
+    .subject-main>div>div {
+        height: 100%;
+        min-width: 20%;
+    }
 }

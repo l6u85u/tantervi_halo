@@ -15,7 +15,7 @@ class ExcelInputHandler:
     def __init__(self,relative_path,index):
         self.__file_path = os.path.join(BASE_DIR,relative_path)
         if relative_path.endswith('.xlsx'):
-            self.__json_file_path = os.path.join(BASE_DIR,relative_path[:-4] + 'json') #the path to the file that will contain the data in json format
+            self.__json_file_path = os.path.join(BASE_DIR,relative_path[:-5] + str(index) + '.json') #the path to the file that will contain the data in json format
         self.__sheet_index = index #the sheet index in the Excel file
 
     #endregion

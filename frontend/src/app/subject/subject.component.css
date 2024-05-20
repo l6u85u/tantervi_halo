@@ -3,9 +3,9 @@
     width: 90%;
     margin-left: 5%;
     margin-bottom: 10px;
-    border-style: solid;
     position: relative;
     border-radius: 5px;
+    border-style: solid;
 }
 
 .subject-box:hover {
@@ -13,23 +13,19 @@
 }
 
 .border0 {
-    border-style: solid;
     border-width: 1px;
 }
 
 .border1 {
-    border-style: solid;
     border-width: 2.5px;
 }
 
 .border2 {
-    border-style: solid;
     border-width: 2.5px;
     border-color: #e03b2f;
 }
 
 .border3 {
-    border-style: solid;
     border-width: 2.5px;
     border-color: #0288D1;
 }
@@ -43,7 +39,7 @@
 }
 
 .subject-credit {
-    font-size: 0.42em;
+    font-size: 0.5em;
     text-align: center;
 }
 
@@ -118,11 +114,20 @@
 }
 
 .info-subject>button {
-    margin-left: 35%;
-    width: 30%;
+    margin-left: 25%;
+    width: 50%;
 }
 
 .info-subject>button>span {
     text-align: center;
     width: 100%;
+}
+
+.icon-disabled {
+    color: #666666;
+    cursor: default;
+}
+
+.icon-enabled {
+    cursor: pointer;
 }
