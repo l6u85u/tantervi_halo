@@ -26,7 +26,7 @@ h1 {
 }
 
 .instruction-title {
-    margin-top: 80px;
+    margin-top: 50px;
 }
 
 .instruction-title>a:hover {
@@ -382,7 +382,7 @@ h1 {
 }
 
 .operation-icons .btn:first-child {
-    margin-left: 15%;
+    margin-left: 10%;
 }
 
 .operation-icons>div {
@@ -433,7 +433,6 @@ h1 {
 }
 
 .subj-type>label {
-    /*padding-right: 15px;*/
     margin-right: 15px;
     width: auto;
 }
@@ -618,22 +617,32 @@ ul {
     color: #0288D1;
 }
 
+.overlay-info {
+    color: #0288D1;
+    font-weight: bold;
+}
+
+.prerequisite-info {
+    color: red;
+    font-weight: bold;
+}
+
 .action-options {
     border: 1px solid;
 }
 
 .action-options>li>button:hover {
-    background-color:#002851;
-    color:white;
+    background-color: #002851;
+    color: white;
 }
 
-.custom-modal-button{
+.custom-modal-button {
     background-color: #7cd1f9;
     border-color: grey;
     border-style: double;
 }
 
-.custom-modal-button:hover{
+.custom-modal-button:hover {
     background-color: #73bfe6;
 }
 
@@ -645,6 +654,10 @@ ul {
     main {
         width: 90%;
         margin-left: 5%;
+    }
+
+    .header-icons>button>p {
+        display: none;
     }
 
     .hide {
@@ -686,6 +699,7 @@ ul {
     }
 
     .action-buttons>div>button>span {
+        margin-top: 5px;
         font-size: 1.4em;
     }
 
@@ -733,6 +747,10 @@ ul {
         display: none;
     }
 
+    .header-icons>button>p {
+        display: none;
+    }
+
     .operation-icons {
         width: 30%;
     }
@@ -768,6 +786,7 @@ ul {
     }
 
     .action-buttons>div>button>span {
+        margin-top: 5px;
         font-size: 1.4em;
     }
 
@@ -818,5 +837,9 @@ ul {
     .subject-main>div>div {
         height: 100%;
         min-width: 20%;
+    }
+
+    .add-columns-icon>p {
+        font-size: 0.65em;
     }
 }

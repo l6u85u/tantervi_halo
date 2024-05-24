@@ -1,11 +1,8 @@
 import { Curriculum } from './curriculum';
 import { Semester } from './semester';
 import { Subject } from './subject';
-
+import { JsonDataHandler } from './json-data-handler';
 import { RESP_FROM_BACKEND } from "../testing/backend-response"
-import { SAVED_CURRICULUM } from '../testing/saved-data';
-import { CORRECT_INPUT } from '../testing/correct_input';
-import { LocalStorageService } from './local-storage.service';
 
 describe('Curriculum', () => {
   let curriculum: Curriculum;
@@ -14,238 +11,14 @@ describe('Curriculum', () => {
     spyOn(XMLHttpRequest.prototype, 'open').and.callThrough();
     spyOn(XMLHttpRequest.prototype, 'send');
 
-    curriculum = new Curriculum(new LocalStorageService(), "PTI Modellező", "modellezo", 7, 2);
+    curriculum = new Curriculum("PTI Modellező", 7, 2);
   });
 
   it('should initialize with default values', () => {
     expect(curriculum.completedCredits).toBe(0);
     expect(curriculum.enrolledCredits).toBe(0);
     expect(curriculum.semesters.length).toBe(0);
-    expect(curriculum.electiveSubjects.length).toBe(0);
-  });
-
-  describe(".getObligatoryData(resp, isEnglish)", function () {
-    let resp: any
-
-    beforeEach(function () {
-      for (let i = 0; i < 6; i++) {
-        curriculum.semesters.push(new Semester())
-      }
-
-      resp = JSON.parse(RESP_FROM_BACKEND);
-    });
-
-    it('should add subjects in the right semester', () => {
-      // @ts-ignore
-      curriculum.getObligatoryData(resp[0], false)
-
-      expect(curriculum.semesters[0].subjects.length).toBe(8);
-      expect(curriculum.semesters[1].subjects.length).toBe(9);
-      expect(curriculum.semesters[2].subjects.length).toBe(9);
-      expect(curriculum.semesters[3].subjects.length).toBe(11);
-      expect(curriculum.semesters[4].subjects.length).toBe(8);
-      expect(curriculum.semesters[5].subjects.length).toBe(1);
-    });
-
-    it('should set all the subjects in the first semester to available', () => {
-      // @ts-ignore
-      curriculum.getObligatoryData(resp[0], false)
-
-      var ok = true
-      for (let i = 0; i < curriculum.semesters[0].subjects.length; i++) {
-        if (!curriculum.semesters[0].subjects[i].isAvailable) {
-          ok = false
-        }
-      }
-
-      expect(ok).toBeTrue()
-    });
-
-    it('should add all the overlays to the subjects', () => {
-      // @ts-ignore
-      curriculum.getObligatoryData(resp[0], false)
-
-      //check the subjects in the first semester
-      expect(curriculum.semesters[0].subjects[0].over.length).toBe(2);
-      expect(curriculum.semesters[0].subjects[1].over.length).toBe(12);
-      expect(curriculum.semesters[0].subjects[2].over.length).toBe(3);
-      expect(curriculum.semesters[0].subjects[3].over.length).toBe(0);
-      expect(curriculum.semesters[0].subjects[4].over.length).toBe(28);
-      expect(curriculum.semesters[0].subjects[5].over.length).toBe(0);
-      expect(curriculum.semesters[0].subjects[6].over.length).toBe(0);
-      expect(curriculum.semesters[0].subjects[7].over.length).toBe(0);
-    });
-
-    it('should add prerequisites to subjects', () => {
-      // @ts-ignore
-      curriculum.getObligatoryData(resp[0], false)
-
-      //check the Algoritmusok es adatszerkezetek I GY and EA subjects
-      expect(curriculum.semesters[1].subjects[4].pre.length).toBe(2);
-      expect(curriculum.semesters[1].subjects[4].pre[0].subject.code).toBe("IP-18MATAG");
-      expect(curriculum.semesters[1].subjects[4].pre[0].weak).toBeFalse();
-      expect(curriculum.semesters[1].subjects[4].pre[1].subject.code).toBe("IP-18PROGEG");
-      expect(curriculum.semesters[1].subjects[4].pre[1].weak).toBeFalse();
-
-      expect(curriculum.semesters[1].subjects[3].pre.length).toBe(1);
-      expect(curriculum.semesters[1].subjects[3].pre[0].subject.code).toBe("IP-18AA1G");
-      expect(curriculum.semesters[1].subjects[3].pre[0].weak).toBeTrue();
-    });
-
-    it('should add lecture or practice to subjects', () => {
-      // @ts-ignore
-      curriculum.getObligatoryData(resp[0], false)
-
-      //check the Algoritmusok es adatszerkezetek I GY, EA and Programozas subjects
-      expect(curriculum.semesters[1].subjects[4].type).toBe("GY");
-      expect(curriculum.semesters[1].subjects[3].type).toBe("EA");
-      expect(curriculum.semesters[0].subjects[1].type).toBe("");
-    });
-
-  });
-
-  describe(".getElectiveData(resp, isEnglish)", function () {
-    let resp: any
-
-    beforeEach(function () {
-      resp = JSON.parse(RESP_FROM_BACKEND);
-    });
-
-    it('should add all the elective subjects', () => {
-      // @ts-ignore
-      curriculum.getElectiveData(resp[1], false)
-
-      expect(curriculum.electiveSubjects.length).toBe(41);
-    });
-
-    it('should add all the overlays to the subjects', () => {
-      // @ts-ignore
-      curriculum.getElectiveData(resp[1], false)
-
-      //check the Webprogramozas, Programozasi Nyelvek (C++) and Python subjects
-      expect(curriculum.electiveSubjects[6].code).toBe("IP-18KWEBPROGEG");
-      expect(curriculum.electiveSubjects[6].over.length).toBe(4);
-
-      expect(curriculum.electiveSubjects[32].code).toBe("IP-18KVPNY1EG");
-      expect(curriculum.electiveSubjects[32].over.length).toBe(3);
-
-      expect(curriculum.electiveSubjects[38].code).toBe("IP-18KVPYEG");
-      expect(curriculum.electiveSubjects[38].over.length).toBe(0);
-    });
-
-    it('should add prerequisites to the subjects', () => {
-      // @ts-ignore
-      curriculum.getElectiveData(resp[1], false)
-
-      //check the Kliensoldali webprog, Programozaselmelet GY and EA subjects
-      expect(curriculum.electiveSubjects[7].code).toBe("IP-18KVIKWPROGEG");
-      expect(curriculum.electiveSubjects[7].pre[0].subject.code).toBe("IP-18KWEBPROGEG");
-      expect(curriculum.electiveSubjects[7].pre[0].weak).toBeFalse();
-
-      expect(curriculum.electiveSubjects[19].code).toBe("IP-18KVSZPREE");
-      expect(curriculum.electiveSubjects[19].pre[0].subject.code).toBe("IP-18KVSZPREG");
-      expect(curriculum.electiveSubjects[19].pre[0].weak).toBeTrue();
-
-      expect(curriculum.electiveSubjects[20].code).toBe("IP-18KVSZPREG");
-      expect(curriculum.electiveSubjects[20].pre.length).toBe(0);
-    });
-
-    it('should add lecture or practice to subjects', () => {
-      // @ts-ignore
-      curriculum.getElectiveData(resp[1], false)
-
-      //check the Kliensoldali webprog, Programozaselmelet GY and EA subjects
-      expect(curriculum.electiveSubjects[7].code).toBe("IP-18KVIKWPROGEG");
-      expect(curriculum.electiveSubjects[7].type).toBe("");
-
-      expect(curriculum.electiveSubjects[19].code).toBe("IP-18KVSZPREE");
-      expect(curriculum.electiveSubjects[19].type).toBe("EA");
-
-      expect(curriculum.electiveSubjects[20].code).toBe("IP-18KVSZPREG");
-      expect(curriculum.electiveSubjects[20].type).toBe("GY");
-    });
-
-  });
-
-  describe(".getSubjects(curriculum)", function () {
-    let curr: any
-
-    beforeEach(function () {
-      const jsonObject = JSON.parse(SAVED_CURRICULUM)
-      curr = jsonObject["PTI Modellező"]
-    });
-
-
-    it('should add all the overlays to the subjects', () => {
-      // @ts-ignore
-      curriculum.getSubjects(curr)
-
-      //check the subjects in the first semester
-      expect(curriculum.semesters[0].subjects[0].over.length).toBe(2);
-      expect(curriculum.semesters[0].subjects[1].over.length).toBe(12);
-      expect(curriculum.semesters[0].subjects[2].over.length).toBe(3);
-      expect(curriculum.semesters[0].subjects[3].over.length).toBe(0);
-      expect(curriculum.semesters[0].subjects[4].over.length).toBe(28);
-      expect(curriculum.semesters[0].subjects[5].over.length).toBe(0);
-      expect(curriculum.semesters[0].subjects[6].over.length).toBe(0);
-      expect(curriculum.semesters[0].subjects[7].over.length).toBe(0);
-    });
-
-    it('should add prerequisites to subjects', () => {
-      // @ts-ignore
-      curriculum.getSubjects(curr)
-
-      //check the Algoritmusok es adatszerkezetek I GY and EA subjects
-      expect(curriculum.semesters[1].subjects[4].pre.length).toBe(2);
-      expect(curriculum.semesters[1].subjects[4].pre[0].subject.code).toBe("IP-18MATAG");
-      expect(curriculum.semesters[1].subjects[4].pre[0].weak).toBeFalse();
-      expect(curriculum.semesters[1].subjects[4].pre[1].subject.code).toBe("IP-18PROGEG");
-      expect(curriculum.semesters[1].subjects[4].pre[1].weak).toBeFalse();
-
-      expect(curriculum.semesters[1].subjects[3].pre.length).toBe(1);
-      expect(curriculum.semesters[1].subjects[3].pre[0].subject.code).toBe("IP-18AA1G");
-      expect(curriculum.semesters[1].subjects[3].pre[0].weak).toBeTrue();
-    });
-
-    it('should recalculate the credits', () => {
-      // @ts-ignore
-      curriculum.getSubjects(curr)
-
-      expect(curriculum.enrolledCredits).toBe(82)
-      expect(curriculum.completedCredits).toBe(70)
-      expect(curriculum.enrolledCreditsPerc).toBe(82 / 1.8 + "%")
-      expect(curriculum.completedCreditsPerc).toBe(70 / 1.8 + "%")
-    });
-
-    it('should keep the number of semesters', () => {
-      // @ts-ignore
-      curriculum.getSubjects(curr)
-      expect(curriculum.semesters.length).toBe(7)
-    });
-
-    it('should keep the status of subjects', () => {
-      // @ts-ignore
-      curriculum.getSubjects(curr)
-
-      let enrolledCounter = 0
-      let completedCounter = 0
-
-      curriculum.semesters.forEach(sem => {
-        sem.subjects.forEach(subj => {
-          if (subj.status == 1) {
-            enrolledCounter += 1
-          }
-          else if (subj.status == 2) {
-            completedCounter += 1
-          }
-        });
-      });
-
-      expect(enrolledCounter).toBe(4)
-      expect(completedCounter).toBe(19)
-
-    });
-
+    expect(curriculum.compElectiveSubjects.length).toBe(0);
   });
 
   describe(".setSubjectAvailability(subj)", function () {
@@ -259,7 +32,7 @@ describe('Curriculum', () => {
       resp = JSON.parse(RESP_FROM_BACKEND);
 
       // @ts-ignore
-      curriculum.getObligatoryData(resp[0], false)
+      JsonDataHandler.getObligatoryData(resp[0], curriculum)
     });
 
     it('should set availability to false (not all prerequisites are completed)', () => {
@@ -302,7 +75,7 @@ describe('Curriculum', () => {
       resp = JSON.parse(RESP_FROM_BACKEND);
 
       // @ts-ignore
-      curriculum.getObligatoryData(resp[0], false)
+      JsonDataHandler.getObligatoryData(resp[0], curriculum)
     });
 
     it('should move subject to a new semester', () => {
@@ -338,7 +111,7 @@ describe('Curriculum', () => {
       resp = JSON.parse(RESP_FROM_BACKEND);
 
       // @ts-ignore
-      curriculum.getObligatoryData(resp[0], false)
+      JsonDataHandler.getObligatoryData(resp[0], curriculum)
     });
 
     it('should delete subject with status not enrolled', () => {
@@ -406,14 +179,14 @@ describe('Curriculum', () => {
       resp = JSON.parse(RESP_FROM_BACKEND);
 
       // @ts-ignore
-      curriculum.getObligatoryData(resp[0], false)
+      JsonDataHandler.getObligatoryData(resp[0], curriculum)
       // @ts-ignore
-      curriculum.getElectiveData(resp[1], false)
+      JsonDataHandler.getElectiveData(resp[1], curriculum)
     });
 
     it('should add elective subject as an overlay to its prerequisites', () => {
       //Webprogramozas subject
-      var subj = curriculum.electiveSubjects[6]
+      var subj = curriculum.compElectiveSubjects[6]
 
       //check Szamitogepes rendszerek and Webfejlesztes overlay list
       expect(curriculum.semesters[0].subjects[0].over.length).toBe(2)
@@ -434,7 +207,7 @@ describe('Curriculum', () => {
 
       let resp = JSON.parse(RESP_FROM_BACKEND);
       // @ts-ignore
-      curriculum.getObligatoryData(resp[0], false)
+      JsonDataHandler.getObligatoryData(resp[0], curriculum)
     });
 
     it('should change the status from not enrolled to enrolled', () => {
@@ -486,6 +259,29 @@ describe('Curriculum', () => {
       expect(curriculum.completedCreditsPerc).toBe(5 / 1.8 + "%")
       expect(curriculum.semesters[0].enrolledCredits).toBe(5)
       expect(curriculum.semesters[0].completedCredits).toBe(5)
+    });
+
+    it('should update the comp. elective and elective credits when changing the status from enrolled to completed', () => {
+      var subject = new Subject("IP-18KWEBPROGEG", "Webprogramozás", 4, "", 0, [], [], 0, 3, "Kötelezően választható", "Informatika", false)
+      curriculum.semesters[5].addNewSubject(subject)
+      curriculum.changeSubjectStatus(subject, 5)
+      expect(curriculum.compElectiveCreditsInfo).toBe(0)
+      curriculum.changeSubjectStatus(subject, 5)
+      expect(curriculum.compElectiveCreditsInfo).toBe(4)
+
+      var subject = new Subject("IP-18KWEBPROGEG", "Example", 4, "", 0, [], [], 0, 3, "Kötelezően választható", "Számítástudomány", false)
+      curriculum.semesters[5].addNewSubject(subject)
+      curriculum.changeSubjectStatus(subject, 5)
+      expect(curriculum.compElectiveCreditsCompScience).toBe(0)
+      curriculum.changeSubjectStatus(subject, 5)
+      expect(curriculum.compElectiveCreditsInfo).toBe(4)
+
+      var subject = new Subject("IP-18KWEBPROGEG", "Example", 4, "", 0, [], [], 0, 3, "Szabadon választható", "Számítástudomány", false)
+      curriculum.semesters[5].addNewSubject(subject)
+      curriculum.changeSubjectStatus(subject, 5)
+      expect(curriculum.electiveCredits).toBe(0)
+      curriculum.changeSubjectStatus(subject, 5)
+      expect(curriculum.electiveCredits).toBe(4)
     });
 
     it('should update the credits when changing the status from completed to not enrolled', () => {
@@ -547,7 +343,7 @@ describe('Curriculum', () => {
 
       let resp = JSON.parse(RESP_FROM_BACKEND);
       // @ts-ignore
-      curriculum.getObligatoryData(resp[0], false)
+      JsonDataHandler.getObligatoryData(resp[0], curriculum)
     });
 
     it('should return true if an overlay subject is in a previous semester', () => {
@@ -580,7 +376,7 @@ describe('Curriculum', () => {
 
       let resp = JSON.parse(RESP_FROM_BACKEND);
       // @ts-ignore
-      curriculum.getObligatoryData(resp[0], false)
+      JsonDataHandler.getObligatoryData(resp[0], curriculum)
     });
 
     it('should return true if a prerequisite subject is in a further semester', () => {
@@ -613,7 +409,7 @@ describe('Curriculum', () => {
 
       let resp = JSON.parse(RESP_FROM_BACKEND);
       // @ts-ignore
-      curriculum.getObligatoryData(resp[0], false)
+      JsonDataHandler.getObligatoryData(resp[0], curriculum)
     });
 
     it('should return true if the subject is already in the curriculum', () => {
@@ -636,7 +432,7 @@ describe('Curriculum', () => {
 
       let resp = JSON.parse(RESP_FROM_BACKEND);
       // @ts-ignore
-      curriculum.getObligatoryData(resp[0], false)
+      JsonDataHandler.getObligatoryData(resp[0], curriculum)
     });
 
     it('should delete semester with the index', () => {
@@ -657,7 +453,7 @@ describe('Curriculum', () => {
 
       let resp = JSON.parse(RESP_FROM_BACKEND);
       // @ts-ignore
-      curriculum.getObligatoryData(resp[0], false)
+      JsonDataHandler.getObligatoryData(resp[0], curriculum)
     });
 
     it('should add new semester', () => {
@@ -676,7 +472,7 @@ describe('Curriculum', () => {
 
       let resp = JSON.parse(RESP_FROM_BACKEND);
       // @ts-ignore
-      curriculum.getObligatoryData(resp[0], false)
+      JsonDataHandler.getObligatoryData(resp[0], curriculum)
     });
 
     it('should recalculate the credits from scratch', () => {
@@ -715,7 +511,7 @@ describe('Curriculum', () => {
 
       let resp = JSON.parse(RESP_FROM_BACKEND);
       // @ts-ignore
-      curriculum.getObligatoryData(resp[0], false)
+      JsonDataHandler.getObligatoryData(resp[0], curriculum)
     });
 
     it('should update the active subject', () => {
@@ -746,6 +542,65 @@ describe('Curriculum', () => {
       expect(curriculum.semesters[4].subjects[2].border).toBe(0)
     });
 
+  });
+  
+  describe(".changeSubjectSpec(subj)", function () {
+    let resp: any;
+
+    beforeEach(function () {
+      for (let i = 0; i < 6; i++) {
+        curriculum.semesters.push(new Semester())
+      }
+
+      resp = JSON.parse(RESP_FROM_BACKEND);
+
+      // @ts-ignore
+      JsonDataHandler.getObligatoryData(resp[0], curriculum)
+    });
+
+    it('should change subject spec from Kotelezoen valaszthato to Szabadon valaszthato)', () => {
+      var subject = new Subject("IP-18KWEBPROGEG", "Webprogramozás", 4, "", 0, [], [], 0, 3, "Kötelezően választható", "Informatika", false)
+
+      expect(subject.spec).toBe("Kötelezően választható");
+      curriculum.changeSubjectSpec(subject)
+      expect(subject.spec).toBe("Szabadon választható");
+    });
+
+    it('should change subject spec from Szabadon valaszthato to Kotelezoen valaszthato)', () => {
+      var subject = new Subject("IP-18KWEBPROGEG", "Szabval1", 4, "", 0, [], [], 0, 3, "Szabadon választható", "Informatika", false)
+
+      expect(subject.spec).toBe("Szabadon választható");
+      curriculum.changeSubjectSpec(subject)
+      expect(subject.spec).toBe("Kötelezően választható");
+    });
+
+    it('should update credits when changing from Szabadon valaszthato to Kotelezoen valaszthato)', () => {
+      var subject = new Subject("IP-18KWEBPROGEG", "Szabval1", 4, "", 0, [], [], 0, 3, "Szabadon választható", "Informatika", false)
+      curriculum.semesters[5].addNewSubject(subject)
+      //set completed status
+      curriculum.changeSubjectStatus(subject,5)
+      curriculum.changeSubjectStatus(subject,5)
+
+      expect(curriculum.compElectiveCreditsInfo).toBe(0);
+      expect(curriculum.electiveCredits).toBe(4);
+      curriculum.changeSubjectSpec(subject)
+      expect(curriculum.compElectiveCreditsInfo).toBe(4);
+      expect(curriculum.electiveCredits).toBe(0);
+    });
+
+    it('should update credits when changing from Kotelezoen valaszthato to Szabadon valaszthato)', () => {
+      var subject = new Subject("IP-18KWEBPROGEG", "Example", 4, "", 0, [], [], 0, 3, "Kötelezően választható", "Számítástudomány", false)
+      curriculum.semesters[5].addNewSubject(subject)
+      //set completed status
+      curriculum.changeSubjectStatus(subject,5)
+      curriculum.changeSubjectStatus(subject,5)
+
+      expect(curriculum.compElectiveCreditsCompScience).toBe(4);
+      expect(curriculum.electiveCredits).toBe(0);
+      curriculum.changeSubjectSpec(subject)
+      expect(curriculum.compElectiveCreditsCompScience).toBe(0);
+      expect(curriculum.electiveCredits).toBe(4);
+    });
   });
 
 });

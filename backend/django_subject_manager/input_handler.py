@@ -2,8 +2,11 @@ import pandas as pd
 from openpyxl import load_workbook
 import os
 import logging
-from django_subject_manager.settings import BASE_DIR
 import json
+from pathlib import Path
+
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 #set the logger
 logger = logging.getLogger("info_logger")
@@ -15,7 +18,7 @@ class ExcelInputHandler:
     def __init__(self,relative_path,index):
         self.__file_path = os.path.join(BASE_DIR,relative_path)
         if relative_path.endswith('.xlsx'):
-            self.__json_file_path = os.path.join(BASE_DIR,relative_path[:-5] + str(index) + '.json') #the path to the file that will contain the data in json format
+            self.__json_file_path = os.path.join(BASE_DIR,relative_path[:-5] + str(index) + '.json') #the path to the file that will contain the data in JSON format
         self.__sheet_index = index #the sheet index in the Excel file
 
     #endregion
@@ -25,11 +28,14 @@ class ExcelInputHandler:
     def get_file_path(self):
         return self.__file_path
     
-    def get_json_file_path(self):
-        return self.__json_file_path
-    
     def set_file_path(self,relative_path):
         self.__file_path = os.path.join(BASE_DIR,relative_path) 
+    
+    def get_json_file_path(self):
+        return self.__json_file_path
+
+    def set_json_file_path(self, relative_path):
+        self.__json_file_path = os.path.join(BASE_DIR,relative_path)
     
     def get_sheet_index(self):
         return self.__sheet_index
@@ -41,57 +47,65 @@ class ExcelInputHandler:
 
     #region Public Methods
 
+    #returns the curriculum in JSON format
     def convert_to_json(self):
         #check if the excel was already converted to json and saved
-        if os.path.exists(self.__json_file_path): 
-            with open(self.__json_file_path, 'r') as file:
-                # load the curriculum from file and return it
-                data = json.load(file)
-                return json.dumps(data, ensure_ascii=False)
+        
+        if os.path.exists(self.__json_file_path):
+            try:
+                with open(self.__json_file_path, 'r') as file:
+                    # load the curriculum from file and return it
+                    data = json.load(file)
+                    logger.info("Response sent to client from JSON files.\n")
+                    return json.dumps(data, ensure_ascii=False)
+            except Exception as e:
+                logger.error("Error: when loading the JSON file.\n" + str(e))
+                return "Error: when loading the JSON file.\n" + str(e)
             
         #convert the excel to json
         else:
-            core_name = ""
-            spec_name = ""
-            elective_name = ""
+            compulsory_header_name = ""
+            compulsory_spec_header_name = ""
+            compulsory_elective_name = ""
 
+            #get the values for the headers from the backend.env file, else use the default value
             english_curriculum_name = os.getenv('ENGLISH_CURRICULUM_FILE_NAME','angol')
             if english_curriculum_name in self.__file_path:
-                core_name = os.getenv('EXCEL_COMPULSORY_SUBJECT_LIST_ENGLISH_NAME','Computer Science BSc 2018 (in English, for Foreign students)')
-                elective_name = os.getenv('EXCEL_COMPULSORY_ELECTIVE_SUBJECT_LIST_ENGLISH_NAME','Electives:')
+                compulsory_header_name = os.getenv('EXCEL_COMP_SUBJECT_LIST_EN_NAME','Computer Science BSc 2018 (in English, for Foreign students)')
+                compulsory_elective_name = os.getenv('EXCEL_COMP_ELECTIVE_SUBJECT_LIST_EN_NAME','Electives:')
             else:
-                core_name = os.getenv('EXCEL_COMPULSORY_SUBJECT_LIST_HUNGARIAN_NAME','Törzsanyag')
-                spec_name = os.getenv('EXCEL_COMPULSORY_SPEC_SUBJECT_LIST_HUNGARIAN_NAME','Specializáció kötelező tárgyai')
-                elective_name = os.getenv('EXCEL_COMPULSORY_ELECTIVE_SUBJECT_LIST_HUNGARIAN_NAME','Specializáció kötelezően választható tárgyai')
+                compulsory_header_name = os.getenv('EXCEL_COMP_SUBJECT_LIST_HU_NAME','Törzsanyag')
+                compulsory_spec_header_name = os.getenv('EXCEL_COMP_SPEC_SUBJECT_LIST_HU_NAME','Specializáció kötelező tárgyai')
+                compulsory_elective_name = os.getenv('EXCEL_COMP_ELECTIVE_SUBJECT_LIST_HU_NAME','Specializáció kötelezően választható tárgyai')
             
-            #we get the start and end index of the rows where the subjects are (core,spec and elective)
+            #get the start and end index of the rows where the subjects are (core,spec and elective)
             try:
-                start_row_core,end_row_core = self.__get_start_and_end_row_indexes(core_name, 0) #for the core subjects
+                start_row_comp,end_row_comp = self.__get_start_and_end_row_indexes(compulsory_header_name, 0) #for the core subjects
 
-                if spec_name != "": #in the English curriculum the core and the spec subjects are not differentiated
-                    start_row_spec,end_row_spec = self.__get_start_and_end_row_indexes(spec_name, end_row_core)
-                    start_row_elective,end_row_elective = self.__get_start_and_end_row_indexes(elective_name, end_row_spec)
+                if compulsory_spec_header_name != "": #in the English curriculum the core and the spec subjects are not differentiated
+                    start_row_spec,end_row_spec = self.__get_start_and_end_row_indexes(compulsory_spec_header_name, end_row_comp)
+                    start_row_elective,end_row_elective = self.__get_start_and_end_row_indexes(compulsory_elective_name, end_row_spec)
                 else:
-                    start_row_elective,end_row_elective = self.__get_start_and_end_row_indexes(elective_name, end_row_core)
+                    start_row_elective,end_row_elective = self.__get_start_and_end_row_indexes(compulsory_elective_name, end_row_comp)
             
             except Exception as e:
-                logger.info("Can not get the Excel start cell and end cell indexes\n" + str(e))
+                logger.error("Can not get the Excel start cell and end cell indexes\n" + str(e))
                 return "Error: can not get the Excel start cell and end cell indexes\n" + str(e)
 
-            #a json array is created with the core + spec and elective subjects
+            #a json array is created with the compulosry + comp. spec subjects (first element) and elective subjects (second element)
             try:
                 resp = ""
-                resp1 = self.__get_json(start_row_core ,end_row_core-start_row_core,True)
-                if (spec_name!=""): #if it is not the English curriculum
-                    resp2 = self.__get_json(start_row_spec,end_row_spec-start_row_spec,True)
-                    resp3 = self.__get_json(start_row_elective,end_row_elective-start_row_elective,False)
-                    resp = "[" + resp1[:-1] + "," + resp2[1:] + "," + resp3 + "]"
+                resp_comp = self.__get_json(start_row_comp ,end_row_comp-start_row_comp,True)
+                if (compulsory_spec_header_name!=""): #if it is not the English curriculum
+                    resp_spec = self.__get_json(start_row_spec,end_row_spec-start_row_spec,True)
+                    resp_elective = self.__get_json(start_row_elective,end_row_elective-start_row_elective,False)
+                    resp = "[" + resp_comp[:-1] + "," + resp_spec[1:] + "," + resp_elective + "]"
                 else:
-                    resp3 = self.__get_json(start_row_elective,end_row_elective-start_row_elective,False)
-                    resp = "[" + resp1 + "," + resp3 + "]"
+                    resp_elective = self.__get_json(start_row_elective,end_row_elective-start_row_elective,False)
+                    resp = "[" + resp_comp + "," + resp_elective + "]"
                 
             except Exception as e:
-                logger.info("Error: invalid Excel input\n" + str(e))
+                logger.error("Error: invalid Excel input\n" + str(e))
                 return "Error: invalid Excel input\n" + str(e)
 
             subject_list = json.loads(resp) #convert to python object
@@ -99,10 +113,15 @@ class ExcelInputHandler:
             #overlay subjects are added to each subjects based on the prerequisites
             self.__prerequisite_handler(subject_list[0])
             self.__prerequisite_handler(subject_list[1])
-
-            with open(self.__json_file_path, 'w') as file:
-                json.dump(subject_list, file, ensure_ascii=False)
-
+            
+            try:
+                with open(self.__json_file_path, 'w') as file:
+                    json.dump(subject_list, file, ensure_ascii=False)
+            except Exception as e:
+                logger.error("Error: can not write JSON data to file.\n" + str(e))
+                return "Error: can not write JSON data to file.\n" + str(e)
+            
+            logger.info("Response sent to client from Excel files.\n")
             return json.dumps(subject_list, ensure_ascii=False)
 
     #endregion
@@ -116,10 +135,9 @@ class ExcelInputHandler:
             # select the active worksheet
             ws = wb.worksheets[self.__sheet_index]
         except:
-            logger.info("Can not load the Excel file")
-            raise Exception("Error loading the file")
+            logger.error("Error: Can not load the Excel file.\n")
+            raise Exception("Error: loading the Excel file")
        
-           
         # find the starting cell and its row index
         subject_row_index = -1
         for row in ws.iter_rows(min_row=start_row_idx , max_col=2, max_row=ws.max_row):
@@ -132,7 +150,7 @@ class ExcelInputHandler:
             break
 
         if subject_row_index == -1:
-            raise Exception("Error finding start cell index")         
+            raise Exception("Error: finding start cell index")         
 
         #skip the empty rows 
         first_subject_row_index = subject_row_index + 1
@@ -148,11 +166,11 @@ class ExcelInputHandler:
                 break
         
         if empty_row_index == -1:
-            raise Exception("Error finding end cell index")
+            raise Exception("Error: finding end cell index")
         
-
         return first_subject_row_index - 1, empty_row_index - 2
 
+    #need to refactor english curriculum names in order to have uniform names
     def __refactor_english_curriculum_columns(self, df):
         if "Code" in df.columns:
             df = df.rename(columns={'Code': 'Kód'})
@@ -172,10 +190,12 @@ class ExcelInputHandler:
             df = df.rename(columns={'Credit': 'Kredit'})
         if "Semester" in df.columns:
             df = df.rename(columns={'Semester': 'Ajánlott félév'})
+
         columns_to_keep = [col for col in df.columns if 'Semester' not in col]
         df = df[columns_to_keep]
         return df
 
+    #return a response in JSON format which contains the list of subjects of a kind (comp., comp. spec, comp. elective)
     def __get_json(self,start_row,number_of_rows, obligatory):
         try:
             #convert Excel to DataFrame
@@ -190,7 +210,7 @@ class ExcelInputHandler:
             json_data = df.to_json(orient='records', force_ascii=False)
             json_list = json.loads(json_data)
         except Exception as e:
-            raise Exception("Error converting the Excel file to JSON: " + str(e))
+            raise Exception("Error: converting the Excel file to JSON: " + str(e))
         
         self.__check_null_cells(df)
             
@@ -216,28 +236,34 @@ class ExcelInputHandler:
             #check if Ajanlott felev cell is correct
             if "Ajánlott félév" in data:
                 data["Ajánlott félév"] = str(data["Ajánlott félév"]).replace('.',',')
+            
+        # filter out elements whose name contains '***', because these subjects are discontinued
+        filt_json_list = [data for data in json_list if '***' not in data["Tanegység"]]
+        #data["Tanegység"] = str(data["Tanegység"]).rstrip('*')
 
-        return json.dumps(json_list, ensure_ascii=False)
+        return json.dumps(filt_json_list, ensure_ascii=False)
 
+    #check the null cells except some columns where it is allowed to have null values
     def __check_null_cells(self,df):
         for column in df.columns:
             if column!="Előfeltétel(ek)" and column!="Számonkérés" and column!="Practice Grade (PG)" and df[column].isnull().any():
                 raise Exception("Error: null cells in the " + column + " column")
 
     def __prerequisite_handler(self,json_data):
-        #adds a new attribute to the subjects which will contain the overlay subjects
+        #adds a new attribute which will contain the overlay subjects to the subjects 
         for data in json_data:
             data["Ráépülő"] = ""
+            data["Kód"] = data["Kód"].strip()
         
         for data in json_data:
-            self.__next_subject_adder(data, data, json_data)
+            self.__overlay_subject_adder(data, data, json_data)
         
         for data in json_data:
             if data["Ráépülő"].endswith(','):
                 data["Ráépülő"] = data["Ráépülő"][:-1]
 
-    def __next_subject_adder(self,data, current_data, json_data):
-        #recursively creates overlays for the subject by going through the prerequisites
+    #recursively creates overlays for the subject by going through the prerequisites
+    def __overlay_subject_adder(self,data, current_data, json_data):
         pre = []
         if ("Előfeltétel(ek)" in current_data and current_data["Előfeltétel(ek)"] is not None):
             words = [word.strip() for word in current_data["Előfeltétel(ek)"].split(",")]
@@ -248,7 +274,7 @@ class ExcelInputHandler:
                 for d in json_data:
                     if "Kód" in d and d["Kód"] == p:
                         d["Ráépülő"] += data["Kód"].strip() + ","
-                        self.__next_subject_adder(data, d, json_data)
+                        self.__overlay_subject_adder(data, d, json_data)
                         break
 
     #endregion

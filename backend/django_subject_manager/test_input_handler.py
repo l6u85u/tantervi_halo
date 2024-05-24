@@ -2,14 +2,17 @@ import unittest
 from unittest.mock import patch
 from input_handler import ExcelInputHandler  
 import os
+import logging
 import pandas as pd
 import json
+
+logging.disable(logging.CRITICAL)
 
 class TestExcelInputHandler(unittest.TestCase):
 
     #region Testing __get_start_and_end_row_indexes method
 
-    def test_get_start_and_end_row_indexes_for_core_subjects(self):
+    def test_get_start_and_end_row_indexes_for_compulsory_subjects(self):
         start_indexes = [8,10,8,8,8]
         end_indexes = [34,36,34,34,32]
 
@@ -20,7 +23,7 @@ class TestExcelInputHandler(unittest.TestCase):
             self.assertEqual(start, start_indexes[i-1])  
             self.assertEqual(end, end_indexes[i-1])
     
-    def test_get_start_and_end_row_indexes_for_spec_subjects(self):
+    def test_get_start_and_end_row_indexes_for_compulsory_spec_subjects(self):
         start_indexes = [39,41,39,41,45]
         end_indexes = [58,60,54,59,59]
 
@@ -31,7 +34,7 @@ class TestExcelInputHandler(unittest.TestCase):
             self.assertEqual(start, start_indexes[i-1])  
             self.assertEqual(end, end_indexes[i-1])
     
-    def test_get_start_and_end_row_indexes_for_elective_subjects(self):
+    def test_get_start_and_end_row_indexes_for_compulsory_elective_subjects(self):
         start_indexes = [62,64,58,64,65]
         end_indexes = [103,103,95,75,78]
 
@@ -46,13 +49,13 @@ class TestExcelInputHandler(unittest.TestCase):
         handler = ExcelInputHandler('test_input/invalid_input1.xlsx', 0)
         with self.assertRaises(Exception) as context:
             _ = handler._ExcelInputHandler__get_start_and_end_row_indexes("Törzsanyag", 0)
-        self.assertTrue('Error finding start cell' in str(context.exception))
+        self.assertTrue('Error: finding start cell' in str(context.exception))
     
     def test_get_start_and_end_row_indexes_with_invalid_file_path(self):
         handler = ExcelInputHandler('test_input/inv_input1.xlsx', 0)
         with self.assertRaises(Exception) as context:
             _ = handler._ExcelInputHandler__get_start_and_end_row_indexes("Törzsanyag", 0)
-        self.assertTrue('Error loading the file' in str(context.exception))
+        self.assertTrue('Error: loading the Excel file' in str(context.exception))
 
     #endregion    
   
@@ -156,15 +159,15 @@ class TestExcelInputHandler(unittest.TestCase):
     
     @patch('pandas.read_excel')
     def test_get_json_with_invalid_input(self,mock_read_excel):
-        mock_read_excel.side_effect = Exception("Error converting the Excel file to JSON: ")
+        mock_read_excel.side_effect = Exception("Error: converting the Excel file to JSON: ")
         handler = ExcelInputHandler('test_input/input1.xlsx', 0)
 
         with self.assertRaises(Exception) as context:
             _ = handler._ExcelInputHandler__get_json(8,26,True)
-        self.assertTrue("Error converting the Excel file to JSON" in str(context.exception))
+        self.assertTrue("Error: converting the Excel file to JSON" in str(context.exception))
 
     #endregion
-
+    
     #region Testing convert_to_json method
 
     def test_convert_to_json_with_valid_input(self):
@@ -178,6 +181,7 @@ class TestExcelInputHandler(unittest.TestCase):
             resp = json.loads(resp)
             self.assertEqual(len(resp[0]), core_subject_nr[i-1])  
             self.assertEqual(len(resp[1]), elective_subject_nr[i-1])
+            os.remove(handler.get_json_file_path())
 
     def test_convert_to_json_with_invalid_file_indexes(self):
         handler = ExcelInputHandler('test_input/input1.xlsx', 0)
@@ -192,8 +196,8 @@ class TestExcelInputHandler(unittest.TestCase):
             self.assertEqual(resp,"Error: invalid Excel input\nError")
     
     def test_convert_to_json_for_english_curriculum(self):
-        core_subject_nr = 42
-        elective_subject_nr = 12
+        core_subject_nr = 40
+        elective_subject_nr = 11
 
         relative_file_path = 'test_input/input_angol.xlsx'
         handler = ExcelInputHandler(relative_file_path, 0)
@@ -201,6 +205,22 @@ class TestExcelInputHandler(unittest.TestCase):
         resp = json.loads(resp)
         self.assertEqual(len(resp[0]), core_subject_nr)  
         self.assertEqual(len(resp[1]), elective_subject_nr)
+        os.remove(handler.get_json_file_path())
+    
+    def test_convert_to_json_response_from_file(self):
+        core_subject_nr = 40
+        elective_subject_nr = 11
+
+        relative_file_path = 'test_input/input_angol.xlsx'
+        handler = ExcelInputHandler(relative_file_path, 0)
+        self.assertEqual(os.path.exists(handler.get_json_file_path()), False)
+        resp = handler.convert_to_json()
+        self.assertEqual(os.path.exists(handler.get_json_file_path()), True)
+        resp = handler.convert_to_json()
+        resp = json.loads(resp)
+        self.assertEqual(len(resp[0]), core_subject_nr)  
+        self.assertEqual(len(resp[1]), elective_subject_nr)
+        os.remove(handler.get_json_file_path())
 
     #endregion
 

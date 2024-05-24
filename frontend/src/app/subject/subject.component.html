@@ -41,19 +41,23 @@
                     <span *ngIf="!languageIsHu" lang="en">Type:</span>
                     {{getSpec()}}
                     <br>
-                    <span *ngIf="!isEnglish" lang="hu">Ismeretkör: <span style="font-weight:normal"> {{box.ken}}
-                        </span></span>
+                    <span *ngIf="!isEnglish" lang="hu">Ismeretkör:
+                        <span style="font-weight:normal"> {{box.ken}}
+                        </span>
+                    </span>
                 </p>
             </div>
             <div class="text-center">
-                <span class="dropdown-item" [ngClass]="box.spec=='Kötelező' ? 'icon-disabled' : ''" data-bs-toggle="modal"
-                data-bs-target="#deleteSubjectModal" (click)="deleteSubject()" click-stop-propagation type="button" class="align-middle material-symbols-outlined">
+                <span class="dropdown-item" [ngClass]="box.spec=='Kötelező' ? 'icon-disabled' : ''"
+                    data-bs-toggle="modal" data-bs-target="#deleteSubjectModal" (click)="deleteSubject()"
+                    click-stop-propagation type="button" class="align-middle material-symbols-outlined">
                     delete
                 </span>
                 <span class="align-middle">
                     |
                 </span>
-                <span class="material-symbols-outlined align-middle" (click)="changeTypeOfSubject()" [ngClass]="box.spec=='Kötelező' ? 'icon-disabled' : 'icon-enabled'">
+                <span class="material-symbols-outlined align-middle" (click)="changeTypeOfSubject()"
+                    [ngClass]="box.spec=='Kötelező' ? 'icon-disabled' : 'icon-enabled'">
                     swap_horiz
                 </span>
             </div>
@@ -79,5 +83,4 @@
             verified
         </span>
     </div>
-
 </div>

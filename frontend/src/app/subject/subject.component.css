@@ -1,5 +1,5 @@
 .subject-box {
-    height: 42px;
+    height: 43px;
     width: 90%;
     margin-left: 5%;
     margin-bottom: 10px;
@@ -17,16 +17,16 @@
 }
 
 .border1 {
-    border-width: 2.5px;
+    border-width: 3.5px;
 }
 
 .border2 {
-    border-width: 2.5px;
+    border-width: 3.5px;
     border-color: #e03b2f;
 }
 
 .border3 {
-    border-width: 2.5px;
+    border-width: 3.5px;
     border-color: #0288D1;
 }
 

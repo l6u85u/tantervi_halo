@@ -1,18 +1,19 @@
 import { TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
-import { AppComponent} from './app.component';
+import { AppComponent } from './app.component';
 import { Semester } from './semester'
 import { Subject } from './subject'
 import { FormsModule, NgForm } from "@angular/forms";
 import { RESP_FROM_BACKEND } from "../testing/backend-response"
-import { SAVED_CURRICULUM } from '../testing/saved-data';
-import { CORRECT_INPUT } from '../testing/correct_input';
+import { CORRECT_INPUT } from '../testing/correct-input';
+import { INCORRECT_INPUT } from '../testing/incorrect-input';
 import * as FileSaver from 'file-saver';
 import swal from 'sweetalert';
 import * as CryptoJS from 'crypto-js';
 import { CdkDragDrop } from '@angular/cdk/drag-drop';
 import { SweetAlert } from 'sweetalert/typings/core';
 import { LocalStorageService } from './local-storage.service';
+import { JsonDataHandler } from './json-data-handler';
 
 describe('AppComponent', () => {
   beforeEach(async () => {
@@ -27,6 +28,8 @@ describe('AppComponent', () => {
   });
 
   it('should create the app', () => {
+    spyOn(XMLHttpRequest.prototype, 'open').and.callThrough();
+    spyOn(XMLHttpRequest.prototype, 'send');
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
     expect(app).toBeTruthy();
@@ -36,8 +39,9 @@ describe('AppComponent', () => {
     let app: AppComponent;
 
     beforeEach(function () {
+      spyOn(XMLHttpRequest.prototype, 'open').and.callThrough();
+      spyOn(XMLHttpRequest.prototype, 'send');
       app = new AppComponent();
-
 
       for (let i = 0; i < 6; i++) {
         app.curriculums[0].semesters.push(new Semester())
@@ -46,7 +50,7 @@ describe('AppComponent', () => {
       var resp = JSON.parse(RESP_FROM_BACKEND);
 
       // @ts-ignore
-      app.curriculums[0].getObligatoryData(resp[0], false)
+      JsonDataHandler.getObligatoryData(resp[0], app.curriculums[0])
 
     });
 
@@ -93,10 +97,12 @@ describe('AppComponent', () => {
 
   });
 
-  describe(".drop(event, index)", async () => {
+  describe(".dropEventHandler(event, index)", async () => {
     let app: AppComponent;
 
     beforeEach(function () {
+      spyOn(XMLHttpRequest.prototype, 'open').and.callThrough();
+      spyOn(XMLHttpRequest.prototype, 'send');
       app = new AppComponent();
 
 
@@ -107,7 +113,7 @@ describe('AppComponent', () => {
       var resp = JSON.parse(RESP_FROM_BACKEND);
 
       // @ts-ignore
-      app.curriculums[0].getObligatoryData(resp[0], false)
+      JsonDataHandler.getObligatoryData(resp[0], app.curriculums[0])
 
     });
 
@@ -115,7 +121,7 @@ describe('AppComponent', () => {
       const event: CdkDragDrop<any[]> = { previousContainer: { element: { nativeElement: { classList: ["class1", "list-0"] } } }, container: { element: { nativeElement: { classList: ["class5", "list-5"] } } }, previousIndex: 7, currentIndex: 1 } as any;
       spyOn<any>(app, 'transferArrayItem');
 
-      app.drop(event, 5)
+      app.dropEventHandler(event, 5)
 
       // @ts-ignore
       expect(app.transferArrayItem).toHaveBeenCalledWith(0, 5, 7, 1);
@@ -127,7 +133,7 @@ describe('AppComponent', () => {
       const event: CdkDragDrop<any[]> = { previousContainer: container, container: container, previousIndex: 7, currentIndex: 1 } as any;
       spyOn<any>(app.curriculums[0], 'moveItemInArray');
 
-      app.drop(event, 0)
+      app.dropEventHandler(event, 0)
 
       // @ts-ignore
       expect(app.curriculums[0].moveItemInArray).toHaveBeenCalledWith(0, 0, 7, 1);
@@ -140,7 +146,7 @@ describe('AppComponent', () => {
       spyOn<any>(app.curriculums[0], 'prerequisiteIsFurther').and.returnValue(false);
       spyOn<any>(app.curriculums[0], 'overlayIsSooner').and.returnValue(false);
 
-      app.drop(event, 5)
+      app.dropEventHandler(event, 5)
       await new Promise(f => setTimeout(f, 10));
       //@ts-ignore
       expect(swal.getState().isOpen).toBeTrue()
@@ -149,7 +155,7 @@ describe('AppComponent', () => {
       swal.close()
 
       app.changeLanguage()
-      app.drop(event, 5)
+      app.dropEventHandler(event, 5)
 
       await new Promise(f => setTimeout(f, 10));
       //@ts-ignore
@@ -165,7 +171,7 @@ describe('AppComponent', () => {
       spyOn<any>(app.curriculums[0], 'prerequisiteIsFurther').and.returnValue(true);
       spyOn<any>(app.curriculums[0], 'overlayIsSooner').and.returnValue(false);
 
-      app.drop(event, 2)
+      app.dropEventHandler(event, 2)
       await new Promise(f => setTimeout(f, 10));
       //@ts-ignore
       expect(swal.getState().isOpen).toBeTrue()
@@ -174,7 +180,7 @@ describe('AppComponent', () => {
       swal.close()
 
       app.changeLanguage()
-      app.drop(event, 2)
+      app.dropEventHandler(event, 2)
 
       await new Promise(f => setTimeout(f, 10));
       //@ts-ignore
@@ -190,7 +196,7 @@ describe('AppComponent', () => {
       spyOn<any>(app.curriculums[0], 'prerequisiteIsFurther').and.returnValue(false);
       spyOn<any>(app.curriculums[0], 'overlayIsSooner').and.returnValue(true);
 
-      app.drop(event, 2)
+      app.dropEventHandler(event, 2)
       await new Promise(f => setTimeout(f, 10));
       //@ts-ignore
       expect(swal.getState().isOpen).toBeTrue()
@@ -199,7 +205,7 @@ describe('AppComponent', () => {
       swal.close()
 
       app.changeLanguage()
-      app.drop(event, 2)
+      app.dropEventHandler(event, 2)
 
       await new Promise(f => setTimeout(f, 10));
       //@ts-ignore
@@ -215,6 +221,8 @@ describe('AppComponent', () => {
     let app: AppComponent;
 
     beforeEach(function () {
+      spyOn(XMLHttpRequest.prototype, 'open').and.callThrough();
+      spyOn(XMLHttpRequest.prototype, 'send');
       app = new AppComponent();
 
       for (let i = 0; i < 6; i++) {
@@ -222,8 +230,9 @@ describe('AppComponent', () => {
       }
 
       var resp = JSON.parse(RESP_FROM_BACKEND);
+
       // @ts-ignore
-      app.curriculums[0].getObligatoryData(resp[0], false)
+      JsonDataHandler.getObligatoryData(resp[0], app.curriculums[0])
 
     });
 
@@ -245,6 +254,8 @@ describe('AppComponent', () => {
     let app: AppComponent;
 
     beforeEach(function () {
+      spyOn(XMLHttpRequest.prototype, 'open').and.callThrough();
+      spyOn(XMLHttpRequest.prototype, 'send');
       app = new AppComponent();
 
 
@@ -289,6 +300,8 @@ describe('AppComponent', () => {
     let app: AppComponent;
 
     beforeEach(function () {
+      spyOn(XMLHttpRequest.prototype, 'open').and.callThrough();
+      spyOn(XMLHttpRequest.prototype, 'send');
       app = new AppComponent();
 
       for (let i = 0; i < 7; i++) {
@@ -296,8 +309,9 @@ describe('AppComponent', () => {
       }
 
       var resp = JSON.parse(RESP_FROM_BACKEND);
+
       // @ts-ignore
-      app.curriculums[0].getObligatoryData(resp[0], false)
+      JsonDataHandler.getObligatoryData(resp[0], app.curriculums[0])
     });
 
     it('should call curriculum.deleteSemester)', () => {
@@ -328,10 +342,12 @@ describe('AppComponent', () => {
 
   });
 
-  describe(".submitForm(form)", async () => {
+  describe(".submitFormEventHandler(form)", async () => {
     let app: AppComponent;
 
     beforeEach(function () {
+      spyOn(XMLHttpRequest.prototype, 'open').and.callThrough();
+      spyOn(XMLHttpRequest.prototype, 'send');
       app = new AppComponent();
 
       for (let i = 0; i < 6; i++) {
@@ -340,7 +356,7 @@ describe('AppComponent', () => {
 
     });
 
-    it('should call semester.addNewSubject() and update the form for optional subject)', () => {
+    it('should call semester.addNewSubject() and update the form for elective subject)', () => {
       spyOn(app.curriculums[0], 'subjectIsAlreadyIn').and.returnValue(false);
       spyOn(app.curriculums[0].semesters[3], 'addNewSubject');
 
@@ -350,24 +366,25 @@ describe('AppComponent', () => {
           code: "IP-CODE",
           credit: 4,
           type: "",
-          semester: 3
+          semester: 3,
+          ken: ""
         }
       };
 
-      app.subjectToAddSpecType = "not obligatory"
+      app.subjectToAddSpecType = "not compulsory"
 
-      app.submitForm(testForm)
+      app.submitFormEventHandler(testForm)
 
       expect(app.curriculums[0].semesters[3].addNewSubject).toHaveBeenCalled();
-      expect(app.optionalSubjectsForm.name).toBe("")
-      expect(app.optionalSubjectsForm.code).toBe("")
-      expect(app.optionalSubjectsForm.credit).toBe(0)
-      expect(app.optionalSubjectsForm.type).toBe("")
-      expect(app.optionalSubjectsForm.semester).toBe(-1)
+      expect(app.electiveSubjectsForm.name).toBe("")
+      expect(app.electiveSubjectsForm.code).toBe("")
+      expect(app.electiveSubjectsForm.credit).toBe(0)
+      expect(app.electiveSubjectsForm.type).toBe("")
+      expect(app.electiveSubjectsForm.semester).toBe(-1)
 
     });
 
-    it('should call the methods for adding a subject and update the form for elective subject)', () => {
+    it('should call the methods for adding a subject and update the form for comp. elective subject)', () => {
       spyOn(app.curriculums[0], 'subjectIsAlreadyIn').and.returnValue(false);
       spyOn(app.curriculums[0], 'connectPrerequisites');
       spyOn(app.curriculums[0], 'setSubjectAvailability');
@@ -375,7 +392,7 @@ describe('AppComponent', () => {
 
       var resp = JSON.parse(RESP_FROM_BACKEND);
       //@ts-ignore
-      app.curriculums[0].getElectiveData(resp[1], false)
+      JsonDataHandler.getElectiveData(resp[1], app.curriculums[0])
 
       const testForm = <NgForm>{
         value: {
@@ -384,15 +401,15 @@ describe('AppComponent', () => {
         }
       };
 
-      app.subjectToAddSpecType = "obligatory"
+      app.subjectToAddSpecType = "compulsory"
 
-      app.submitForm(testForm)
+      app.submitFormEventHandler(testForm)
 
       expect(app.curriculums[0].semesters[5].addNewSubject).toHaveBeenCalled();
       expect(app.curriculums[0].connectPrerequisites).toHaveBeenCalled();
       expect(app.curriculums[0].setSubjectAvailability).toHaveBeenCalled();
-      expect(app.electiveSubjectsForm.name).toBe("")
-      expect(app.electiveSubjectsForm.semester).toBe(-1)
+      expect(app.compElectiveSubjectsForm.name).toBe("")
+      expect(app.compElectiveSubjectsForm.semester).toBe(-1)
 
     });
 
@@ -405,14 +422,15 @@ describe('AppComponent', () => {
           code: "IP-CODEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
           credit: 31,
           type: "",
-          semester: 3
+          semester: 3,
+          ken: ""
         }
       };
 
-      app.subjectToAddSpecType = "not obligatory"
-      app.optionalSubjectsForm = testForm.value
+      app.subjectToAddSpecType = "not compulsory"
+      app.electiveSubjectsForm = testForm.value
 
-      app.submitForm(testForm)
+      app.submitFormEventHandler(testForm)
 
       await new Promise(f => setTimeout(f, 20));
       //@ts-ignore
@@ -421,7 +439,7 @@ describe('AppComponent', () => {
       swal.close()
 
       app.changeLanguage()
-      app.submitForm(testForm)
+      app.submitFormEventHandler(testForm)
       await new Promise(f => setTimeout(f, 20));
       //@ts-ignore
       expect(swal.getState().isOpen).toBeTrue()
@@ -429,7 +447,7 @@ describe('AppComponent', () => {
       swal.close()
     });
 
-    it('should emit an alert because the optional subject is already in the curriculum)', async () => {
+    it('should emit an alert because the elective subject is already in the curriculum)', async () => {
       spyOn(app.curriculums[0], 'subjectIsAlreadyIn').and.returnValue(true);
 
       const testForm = <NgForm>{
@@ -438,13 +456,14 @@ describe('AppComponent', () => {
           code: "IP-18PROGEG",
           credit: 5,
           type: "",
-          semester: 4
+          semester: 4,
+          ken: ""
         }
       };
 
-      app.subjectToAddSpecType = "not obligatory"
+      app.subjectToAddSpecType = "not compulsory"
 
-      app.submitForm(testForm)
+      app.submitFormEventHandler(testForm)
 
       await new Promise(f => setTimeout(f, 20));
       //@ts-ignore
@@ -453,7 +472,7 @@ describe('AppComponent', () => {
       swal.close()
 
       app.changeLanguage()
-      app.submitForm(testForm)
+      app.submitFormEventHandler(testForm)
       await new Promise(f => setTimeout(f, 20));
       //@ts-ignore
       expect(swal.getState().isOpen).toBeTrue()
@@ -468,7 +487,7 @@ describe('AppComponent', () => {
 
       var resp = JSON.parse(RESP_FROM_BACKEND);
       //@ts-ignore
-      app.curriculums[0].getElectiveData(resp[1], false)
+      JsonDataHandler.getElectiveData(resp[1], app.curriculums[0])
 
       const testForm = <NgForm>{
         value: {
@@ -477,9 +496,9 @@ describe('AppComponent', () => {
         }
       };
 
-      app.subjectToAddSpecType = "obligatory"
+      app.subjectToAddSpecType = "compulsory"
 
-      app.submitForm(testForm)
+      app.submitFormEventHandler(testForm)
 
       await new Promise(f => setTimeout(f, 20));
       //@ts-ignore
@@ -488,7 +507,7 @@ describe('AppComponent', () => {
       swal.close()
 
       app.changeLanguage()
-      app.submitForm(testForm)
+      app.submitFormEventHandler(testForm)
       await new Promise(f => setTimeout(f, 20));
       //@ts-ignore
       expect(swal.getState().isOpen).toBeTrue()
@@ -496,12 +515,12 @@ describe('AppComponent', () => {
       swal.close()
     });
 
-    it('should emit an alert because the elective subject is already in the curriculum)', async () => {
+    it('should emit an alert because the comp. elective subject is already in the curriculum)', async () => {
       spyOn(app.curriculums[0], 'subjectIsAlreadyIn').and.returnValue(true);
 
       var resp = JSON.parse(RESP_FROM_BACKEND);
       //@ts-ignore
-      app.curriculums[0].getElectiveData(resp[1], false)
+      JsonDataHandler.getElectiveData(resp[1], app.curriculums[0])
 
       const testForm = <NgForm>{
         value: {
@@ -510,9 +529,9 @@ describe('AppComponent', () => {
         }
       };
 
-      app.subjectToAddSpecType = "obligatory"
+      app.subjectToAddSpecType = "compulsory"
 
-      app.submitForm(testForm)
+      app.submitFormEventHandler(testForm)
 
       await new Promise(f => setTimeout(f, 20));
       //@ts-ignore
@@ -521,7 +540,7 @@ describe('AppComponent', () => {
       swal.close()
 
       app.changeLanguage()
-      app.submitForm(testForm)
+      app.submitFormEventHandler(testForm)
       await new Promise(f => setTimeout(f, 20));
       //@ts-ignore
       expect(swal.getState().isOpen).toBeTrue()
@@ -535,48 +554,14 @@ describe('AppComponent', () => {
     let app: AppComponent;
 
     beforeEach(function () {
+      spyOn(XMLHttpRequest.prototype, 'open').and.callThrough();
+      spyOn(XMLHttpRequest.prototype, 'send');
       app = new AppComponent();
 
       for (let i = 0; i < 7; i++) {
         app.curriculums[0].semesters.push(new Semester())
       }
 
-    });
-
-    it('should rerturn true if the optional subject form is filled)', () => {
-      const testForm = <NgForm>{
-        value: {
-          name: "ExampleSubj",
-          code: "IP-CODE",
-          credit: 4,
-          type: "",
-          semester: 3
-        }
-      };
-
-      app.subjectToAddSpecType = "not obligatory"
-      app.optionalSubjectsForm = testForm.value
-
-      var ok = app.checkForm()
-      expect(ok).toBeTrue();
-    });
-
-    it('should return false if the optional subject form is not filled)', () => {
-      const testForm = <NgForm>{
-        value: {
-          name: "ExampleSubj",
-          code: "",
-          credit: 4,
-          type: "",
-          semester: 3
-        }
-      };
-
-      app.subjectToAddSpecType = "not obligatory"
-      app.optionalSubjectsForm = testForm.value
-
-      var ok = app.checkForm()
-      expect(ok).toBeFalse();
     });
 
     it('should rerturn true if the elective subject form is filled)', () => {
@@ -586,11 +571,12 @@ describe('AppComponent', () => {
           code: "IP-CODE",
           credit: 4,
           type: "",
-          semester: 3
+          semester: 3,
+          ken: ""
         }
       };
 
-      app.subjectToAddSpecType = "obligatory"
+      app.subjectToAddSpecType = "not compulsory"
       app.electiveSubjectsForm = testForm.value
 
       var ok = app.checkForm()
@@ -601,15 +587,54 @@ describe('AppComponent', () => {
       const testForm = <NgForm>{
         value: {
           name: "ExampleSubj",
-          code: "IP-CODE",
+          code: "",
           credit: 4,
           type: "",
-          semester: -1
+          semester: 3,
+          ken: ""
         }
       };
 
-      app.subjectToAddSpecType = "obligatory"
+      app.subjectToAddSpecType = "not compulsory"
       app.electiveSubjectsForm = testForm.value
+
+      var ok = app.checkForm()
+      expect(ok).toBeFalse();
+    });
+
+    it('should rerturn true if the comp. elective subject form is filled)', () => {
+      const testForm = <NgForm>{
+        value: {
+          name: "ExampleSubj",
+          code: "IP-CODE",
+          credit: 4,
+          type: "",
+          semester: 3,
+          ken: ""
+        }
+      };
+
+      app.subjectToAddSpecType = "compulsory"
+      app.compElectiveSubjectsForm = testForm.value
+
+      var ok = app.checkForm()
+      expect(ok).toBeTrue();
+    });
+
+    it('should return false if the comp. elective subject form is not filled)', () => {
+      const testForm = <NgForm>{
+        value: {
+          name: "ExampleSubj",
+          code: "IP-CODE",
+          credit: 4,
+          type: "",
+          semester: -1,
+          ken: ""
+        }
+      };
+
+      app.subjectToAddSpecType = "compulsory"
+      app.compElectiveSubjectsForm = testForm.value
 
       var ok = app.checkForm()
       expect(ok).toBeFalse();
@@ -621,11 +646,13 @@ describe('AppComponent', () => {
     let app: AppComponent;
 
     beforeEach(function () {
+      spyOn(XMLHttpRequest.prototype, 'open').and.callThrough();
+      spyOn(XMLHttpRequest.prototype, 'send');
       app = new AppComponent();
     });
 
     it('should set the message in hungarian and set the subject to delete)', () => {
-      var subject = new Subject("IP-18PROGEG", "Programozás", 6, "", 0, [], [], 0, 1, "obligatory", "Informatika", false)
+      var subject = new Subject("IP-18PROGEG", "Programozás", 6, "", 0, [], [], 0, 1, "Kötelező", "Informatika", false)
       app.showDeleteSubjectModal(subject, 3)
 
       expect(app.modalTitleText).toBe("Tárgy törlése");
@@ -634,7 +661,7 @@ describe('AppComponent', () => {
     });
 
     it('should set the message in english and set the subject to delete)', () => {
-      var subject = new Subject("IP-18PROGEG", "Programozás", 6, "", 0, [], [], 0, 1, "obligatory", "Informatika", false)
+      var subject = new Subject("IP-18PROGEG", "Programozás", 6, "", 0, [], [], 0, 1, "Kötelező", "Informatika", false)
       app.changeLanguage()
       app.showDeleteSubjectModal(subject, 3)
 
@@ -649,6 +676,8 @@ describe('AppComponent', () => {
     let app: AppComponent;
 
     beforeEach(function () {
+      spyOn(XMLHttpRequest.prototype, 'open').and.callThrough();
+      spyOn(XMLHttpRequest.prototype, 'send');
       app = new AppComponent();
     });
 
@@ -669,6 +698,8 @@ describe('AppComponent', () => {
     let app: AppComponent;
 
     beforeEach(function () {
+      spyOn(XMLHttpRequest.prototype, 'open').and.callThrough();
+      spyOn(XMLHttpRequest.prototype, 'send');
       app = new AppComponent();
     });
 
@@ -684,6 +715,8 @@ describe('AppComponent', () => {
     let app: AppComponent;
 
     beforeEach(function () {
+      spyOn(XMLHttpRequest.prototype, 'open').and.callThrough();
+      spyOn(XMLHttpRequest.prototype, 'send');
       app = new AppComponent();
     });
 
@@ -699,6 +732,8 @@ describe('AppComponent', () => {
     let app: AppComponent;
 
     beforeEach(function () {
+      spyOn(XMLHttpRequest.prototype, 'open').and.callThrough();
+      spyOn(XMLHttpRequest.prototype, 'send');
       app = new AppComponent();
 
       for (let i = 0; i < 6; i++) {
@@ -707,7 +742,7 @@ describe('AppComponent', () => {
 
       var resp = JSON.parse(RESP_FROM_BACKEND);
       // @ts-ignore
-      app.curriculums[0].getObligatoryData(resp[0], false)
+      JsonDataHandler.getObligatoryData(resp[0], app.curriculums[0])
     });
 
     it('should call FileSaver.saveAs', () => {
@@ -718,10 +753,12 @@ describe('AppComponent', () => {
 
   });
 
-  /*describe(".openFile(event)", () => {
+  describe(".saveCurriculumToStorage()", () => {
     let app: AppComponent;
 
     beforeEach(function () {
+      spyOn(XMLHttpRequest.prototype, 'open').and.callThrough();
+      spyOn(XMLHttpRequest.prototype, 'send');
       app = new AppComponent();
 
       for (let i = 0; i < 6; i++) {
@@ -730,34 +767,113 @@ describe('AppComponent', () => {
 
       var resp = JSON.parse(RESP_FROM_BACKEND);
       // @ts-ignore
-      app.curriculums[0].getObligatoryData(resp[0], false)
+      JsonDataHandler.getObligatoryData(resp[0], app.curriculums[0])
+      app.storage.clear()
     });
 
-    it('should call app.loadDataFromFile', () => {
-      spyOn<any>(app, 'loadDataFromFile')
+    it('should save the curriculum to the Local Storage', () => {
+      expect(app.storage.get(app.currentSpecName)).toBeNull();
+      app.saveCurriculumToStorage()
+      expect(app.storage.get(app.currentSpecName)).not.toBeNull();
+      app.storage.remove(app.currentSpecName)
+    });
+
+  });
+
+  describe(".loadCurriculumFromStorage()", () => {
+    let app: AppComponent;
+
+    beforeEach(function () {
+      spyOn(XMLHttpRequest.prototype, 'open').and.callThrough();
+      spyOn(XMLHttpRequest.prototype, 'send');
+      app = new AppComponent();
+
+      for (let i = 0; i < 6; i++) {
+        app.curriculums[0].semesters.push(new Semester())
+      }
+
+      var resp = JSON.parse(RESP_FROM_BACKEND);
+      // @ts-ignore
+      JsonDataHandler.getObligatoryData(resp[0], app.curriculums[0])
+      app.saveCurriculumToStorage()
+    });
+
+    it('should load the curriculum correctly from the Local Storage', () => {
+      var numberOfSubjectsInSemesters = []
+      var semesters = app.curriculums[0].semesters
+      for (let i = 0; i < app.curriculums[0].semesters.length; i++) {
+        numberOfSubjectsInSemesters.push(app.curriculums[0].semesters[i].subjects.length);
+      }
+      app.loadCurriculumFromStorage()
+      expect(app.curriculums[0].semesters).not.toBe(semesters);
+      for (let i = 0; i < app.curriculums[0].semesters.length; i++) {
+        expect(app.curriculums[0].semesters[i].subjects.length).toEqual(numberOfSubjectsInSemesters[i])
+      }
+      app.storage.remove(app.currentSpecName)
+    });
+
+  });
+
+  describe(".openFile(event)", () => {
+    let app: AppComponent;
+
+    beforeEach(function () {
+      spyOn(XMLHttpRequest.prototype, 'open');
+      spyOn(XMLHttpRequest.prototype, 'send');
+      app = new AppComponent();
+
+      for (let i = 0; i < 6; i++) {
+        app.curriculums[0].semesters.push(new Semester())
+      }
+
+      var resp = JSON.parse(RESP_FROM_BACKEND);
+      // @ts-ignore
+      JsonDataHandler.getObligatoryData(resp[0], app.curriculums[0])
+    });
+
+    
+    it('should load the curriculum from file', () => {
+      const fakeFile = new File([CORRECT_INPUT], "file.txt", { type: "text/plain" });
       var event = {
         target: {
-          files: [new Blob([CORRECT_INPUT],{ type: 'text/plain;charset=utf-8' })]
+          files: [fakeFile]
         }
       }
-      
+      var numberOfSubjectsInSemesters = []
+      for (let i = 0; i < app.curriculums[0].semesters.length; i++) {
+        numberOfSubjectsInSemesters.push(app.curriculums[0].semesters[i].subjects.length);
+      }
+
       app.openFile(event)
-      // @ts-ignore
-      expect(app.loadDataFromFile).toHaveBeenCalled();
+      for (let i = 0; i < app.curriculums[0].semesters.length; i++) {
+        expect(app.curriculums[0].semesters[i].subjects.length).toEqual(numberOfSubjectsInSemesters[i])
+      }
     });
-
-    it('should throw error: wrong file format', () => {
-      spyOn<any>(app, 'loadDataFromFile').and.throwError("ERROR")
+    
+    it('should emit an alert because of the wrong file format', async () => {
       var event = {
         target: {
-          files: [new Blob([CORRECT_INPUT],{ type: 'text/plain;charset=utf-8' })]
+          files: [new Blob([INCORRECT_INPUT], { type: 'text/plain;charset=utf-8' })]
         }
       }
 
-      // @ts-ignore
-      expect(() => {app.openFile(event)}).toThrowError();
-    });
+      app.openFile(event)
+      await new Promise(f => setTimeout(f, 20));
+      //@ts-ignore
+      expect(swal.getState().isOpen).toBeTrue()
+      //@ts-ignore
+      swal.close()
 
-  });*/
+      app.changeLanguage()
+      app.openFile(event)
+      await new Promise(f => setTimeout(f, 20));
+      //@ts-ignore
+      expect(swal.getState().isOpen).toBeTrue()
+      //@ts-ignore
+      swal.close()
+    });
+    
+  });
+
 });
 
