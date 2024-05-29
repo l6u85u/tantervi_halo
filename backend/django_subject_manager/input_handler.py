@@ -172,24 +172,24 @@ class ExcelInputHandler:
 
     #need to refactor english curriculum names in order to have uniform names
     def __refactor_english_curriculum_columns(self, df):
-        if "Code" in df.columns:
-            df = df.rename(columns={'Code': 'Kód'})
-        if "Course" in df.columns:
-            df = df.rename(columns={'Course': 'Tanegység'})
-        if "Előfeltétel 1" in df.columns:
-            df = df.rename(columns={'Előfeltétel 1': 'Előfeltétel(ek)'})
+        if "Subject Code" in df.columns:
+            df = df.rename(columns={'Subject Code': 'Kód'})
+        if "Subject" in df.columns:
+            df = df.rename(columns={'Subject': 'Tanegység'})
+        if "Prerequisite" in df.columns:
+            df = df.rename(columns={'Prerequisite': 'Előfeltétel(ek)'})
         if "Lecture (L)" in df.columns:
             df = df.rename(columns={'Lecture (L)': 'Előadás'})
         if "Exam €" in df.columns:
             df = df.rename(columns={'Exam €': 'Számonkérés'})
-        if "Practice (Pr" in df.columns:
-            df = df.rename(columns={'Practice (Pr': 'Gyakorlat'})
+        if "Practice (Pr)" in df.columns:
+            df = df.rename(columns={'Practice (Pr)': 'Gyakorlat'})
         if "Consultation" in df.columns:
             df = df.rename(columns={'Consultation': 'Konzultáció'})
         if "Credit" in df.columns:
             df = df.rename(columns={'Credit': 'Kredit'})
-        if "Semester" in df.columns:
-            df = df.rename(columns={'Semester': 'Ajánlott félév'})
+        if "Recommended Semester" in df.columns:
+            df = df.rename(columns={'Recommended Semester': 'Ajánlott félév'})
 
         columns_to_keep = [col for col in df.columns if 'Semester' not in col]
         df = df[columns_to_keep]
@@ -245,7 +245,7 @@ class ExcelInputHandler:
     #check the null cells except some columns where it is allowed to have null values
     def __check_null_cells(self,df):
         for column in df.columns:
-            if column!="Előfeltétel(ek)" and column!="Számonkérés" and column!="Practice Grade (PG)" and df[column].isnull().any():
+            if column!="Előfeltétel(ek)" and column!="Számonkérés" and column!="Form of assessment" and df[column].isnull().any():
                 raise Exception("Error: null cells in the " + column + " column")
 
     def __prerequisite_handler(self,json_data):

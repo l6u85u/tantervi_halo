@@ -227,13 +227,15 @@ describe('AppComponent', () => {
 
       for (let i = 0; i < 6; i++) {
         app.curriculums[0].semesters.push(new Semester())
+        app.curriculums[1].semesters.push(new Semester())
       }
 
       var resp = JSON.parse(RESP_FROM_BACKEND);
 
       // @ts-ignore
       JsonDataHandler.getObligatoryData(resp[0], app.curriculums[0])
-
+      // @ts-ignore
+      JsonDataHandler.getObligatoryData(resp[0], app.curriculums[1])
     });
 
     it('should change the spec)', () => {

@@ -64,15 +64,15 @@ class TestExcelInputHandler(unittest.TestCase):
     def test_refactor_english_curriculum_columns(self):
         # making a sample DataFrame with English column names
         data = {
-            'Code': [101, 102, 103],
-            'Course': ['Math', 'Physics', 'Chemistry'],
-            'Előfeltétel 1': ['None', '101', '102'],
+            'Subject Code': [101, 102, 103],
+            'Subject': ['Math', 'Physics', 'Chemistry'],
+            'Prerequisite': ['None', '101', '102'],
             'Lecture (L)': [2, 3, 3],
             'Exam €': ['', '', ''],
-            'Practice (Pr': [1, 1, 1],
+            'Practice (Pr)': [1, 1, 1],
             'Consultation': ['', '', ''],
             'Credit': [3, 3, 3],
-            'Semester': [1, 2, 2],
+            'Recommended Semester': [1, 2, 2],
             'Semester 1': ['','',''],
             'Semester 2': ['','',''],
             'Semester 3': ['','','']

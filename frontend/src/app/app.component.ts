@@ -219,6 +219,22 @@ export class AppComponent {
   public changeSpec(index: number) {
     this.curriculums[this._currentSpecIdx].updateCurrentSubjectCode("")
     this._currentSpecIdx = index;
+    //check if the data was sent from the backend
+    var isProblem = true
+    for (var i = 0; i < this.curriculums[this._currentSpecIdx].semesters.length; i++) {
+      if (this.curriculums[this._currentSpecIdx].semesters[i].subjects.length != 0) {
+        isProblem = false
+        break
+      }
+    }
+    if (isProblem) {
+      if (this._isLanguageHu) {
+        swal({ text: "A betöltés sikertelen volt!", dangerMode: true })
+      }
+      else {
+        swal({ text: "The loading was unsuccessful!", dangerMode: true })
+      }
+    }
     this._currentSpecName = SPEC_NAMES[index]
     this.curriculums[index].updateCredits()
   }
@@ -380,7 +396,7 @@ export class AppComponent {
     try {
       FileDataAccess.saveFile(this.curriculums[this.currentSpecIdx])
     }
-    catch(error){
+    catch (error) {
       if (this._isLanguageHu) {
         swal({ text: "A mentés sikertelen volt", dangerMode: true })
       }
@@ -388,7 +404,7 @@ export class AppComponent {
         swal({ text: "The save was unsuccessful!", dangerMode: true })
       }
 
-      if (error instanceof Error){
+      if (error instanceof Error) {
         console.log(error.message)
       }
     }
@@ -401,11 +417,25 @@ export class AppComponent {
       subjects.push(this._curriculums[this._currentSpecIdx].semesters[i].subjects)
     }
 
-    var content = JSON.stringify(subjects, JsonDataHandler.changePrerequisitesAndOverlaysToString);
-    var internship = this._curriculums[this._currentSpecIdx].isInternshipCompleted.toString()
+    try {
+      var content = JSON.stringify(subjects, JsonDataHandler.changePrerequisitesAndOverlaysToString);
+      var internship = this._curriculums[this._currentSpecIdx].isInternshipCompleted.toString()
 
-    content = '{"subjects":' + content + ',"internship":' + internship + "}"
-    this._storage.set(this.currentSpecName, content)
+      content = '{"subjects":' + content + ',"internship":' + internship + "}"
+      this._storage.set(this.currentSpecName, content)
+    }
+    catch (error) {
+      if (error instanceof Error) {
+        console.error(error)
+      }
+      if (this.isLanguageHu) {
+        swal({ text: "A mentés sikertelen volt", dangerMode: true })
+      }
+      else {
+        swal({ text: "The save was unsuccessful!", dangerMode: true })
+      }
+    }
+
   }
 
   //reset the state of the curriculum to the initial state of the spec
@@ -456,18 +486,31 @@ export class AppComponent {
   }
 
   public loadCurriculumFromStorage() {
-    var content = this._storage.get(this._currentSpecName)
-    if (content) {
-      var resp = JSON.parse(content)
-      this._curriculums[this.currentSpecIdx] = new Curriculum(SPEC_NAMES[this.currentSpecIdx], SPEC_COMP_INFO_CREDITS[this.currentSpecIdx], SPEC_COMP_SCIENCE_CREDITS[this.currentSpecIdx])
-      JsonDataHandler.getAllData(resp.subjects, resp.internship, this._curriculums[this.currentSpecIdx])
-    }
-    else {
-      if (this.isLanguageHu){
-        swal({ text: "A local storage-ban nincs elmentve " + this.currentSpecName + " tanterv!", dangerMode: true })
+    try {
+      var content = this._storage.get(this._currentSpecName)
+      if (content) {
+        var resp = JSON.parse(content)
+        this._curriculums[this.currentSpecIdx] = new Curriculum(SPEC_NAMES[this.currentSpecIdx], SPEC_COMP_INFO_CREDITS[this.currentSpecIdx], SPEC_COMP_SCIENCE_CREDITS[this.currentSpecIdx])
+        JsonDataHandler.getAllData(resp.subjects, resp.internship, this._curriculums[this.currentSpecIdx])
       }
       else {
-        swal({ text: "There are no " + this.currentSpecName + " curriculum saved in the local storage!", dangerMode: true })
+        if (this.isLanguageHu) {
+          swal({ text: "A local storage-ban nincs elmentve " + this.currentSpecName + " tanterv!", dangerMode: true })
+        }
+        else {
+          swal({ text: "There are no " + this.currentSpecName + " curriculum saved in the local storage!", dangerMode: true })
+        }
+      }
+    }
+    catch (error) {
+      if (error instanceof Error) {
+        console.error(error.message)
+      }
+      if (this._isLanguageHu) {
+        swal({ text: "Hibás a formátum!", dangerMode: true })
+      }
+      else {
+        swal({ text: "The format is incorrect!", dangerMode: true })
       }
     }
   }
