@@ -12,47 +12,47 @@ class TestExcelInputHandler(unittest.TestCase):
 
     #region Testing __get_start_and_end_row_indexes method
 
-    def test_get_start_and_end_row_indexes_for_compulsory_subjects(self):
+    def test_get_start_and_end_row_indexes_for_comp_subjects(self):
         start_indexes = [8,10,8,8,8]
         end_indexes = [34,36,34,34,32]
 
         for i in range (1,6):
-            relative_file_path = 'test_input/input' + str(i) + '.xlsx'
+            relative_file_path = 'django_subject_manager/test_input/input' + str(i) + '.xlsx'
             handler = ExcelInputHandler(relative_file_path, 0)
             start, end = handler._ExcelInputHandler__get_start_and_end_row_indexes("Törzsanyag", 0)
             self.assertEqual(start, start_indexes[i-1])  
             self.assertEqual(end, end_indexes[i-1])
     
-    def test_get_start_and_end_row_indexes_for_compulsory_spec_subjects(self):
+    def test_get_start_and_end_row_indexes_for_comp_spec_subjects(self):
         start_indexes = [39,41,39,41,45]
         end_indexes = [58,60,54,59,59]
 
         for i in range (1,6):
-            relative_file_path = 'test_input/input' + str(i) + '.xlsx'
+            relative_file_path = 'django_subject_manager/test_input/input' + str(i) + '.xlsx'
             handler = ExcelInputHandler(relative_file_path, 0)
             start, end = handler._ExcelInputHandler__get_start_and_end_row_indexes("Specializáció kötelező tárgyai", 0)
             self.assertEqual(start, start_indexes[i-1])  
             self.assertEqual(end, end_indexes[i-1])
     
-    def test_get_start_and_end_row_indexes_for_compulsory_elective_subjects(self):
+    def test_get_start_and_end_row_indexes_for_comp_elective_subjects(self):
         start_indexes = [62,64,58,64,65]
         end_indexes = [103,103,95,75,78]
 
         for i in range (1,6):
-            relative_file_path = 'test_input/input' + str(i) + '.xlsx'
+            relative_file_path = 'django_subject_manager/test_input/input' + str(i) + '.xlsx'
             handler = ExcelInputHandler(relative_file_path, 0)
             start, end = handler._ExcelInputHandler__get_start_and_end_row_indexes("Specializáció kötelezően választható tárgyai", 0)
             self.assertEqual(start, start_indexes[i-1])  
             self.assertEqual(end, end_indexes[i-1])
     
     def test_get_start_and_end_row_indexes_with_invalid_input(self):
-        handler = ExcelInputHandler('test_input/invalid_input1.xlsx', 0)
+        handler = ExcelInputHandler('django_subject_manager/test_input/invalid_input1.xlsx', 0)
         with self.assertRaises(Exception) as context:
             _ = handler._ExcelInputHandler__get_start_and_end_row_indexes("Törzsanyag", 0)
         self.assertTrue('Error: finding start cell' in str(context.exception))
     
     def test_get_start_and_end_row_indexes_with_invalid_file_path(self):
-        handler = ExcelInputHandler('test_input/inv_input1.xlsx', 0)
+        handler = ExcelInputHandler('django_subject_manager/test_input/inv_input1.xlsx', 0)
         with self.assertRaises(Exception) as context:
             _ = handler._ExcelInputHandler__get_start_and_end_row_indexes("Törzsanyag", 0)
         self.assertTrue('Error: loading the Excel file' in str(context.exception))
@@ -138,7 +138,7 @@ class TestExcelInputHandler(unittest.TestCase):
     #region Testing __get_json method
 
     def test_get_json_with_valid_input(self):
-        handler = ExcelInputHandler('test_input/input1.xlsx', 0)
+        handler = ExcelInputHandler('django_subject_manager/test_input/input1.xlsx', 0)
         result = handler._ExcelInputHandler__get_json(8,26,True)
         result = json.loads(result)
         s1 = result[0]
@@ -160,7 +160,7 @@ class TestExcelInputHandler(unittest.TestCase):
     @patch('pandas.read_excel')
     def test_get_json_with_invalid_input(self,mock_read_excel):
         mock_read_excel.side_effect = Exception("Error: converting the Excel file to JSON: ")
-        handler = ExcelInputHandler('test_input/input1.xlsx', 0)
+        handler = ExcelInputHandler('django_subject_manager/test_input/input1.xlsx', 0)
 
         with self.assertRaises(Exception) as context:
             _ = handler._ExcelInputHandler__get_json(8,26,True)
@@ -175,7 +175,7 @@ class TestExcelInputHandler(unittest.TestCase):
         elective_subject_nr = [41,39,37,11,13]
 
         for i in range (1,6):
-            relative_file_path = 'test_input/input' + str(i) + '.xlsx'
+            relative_file_path = 'django_subject_manager/test_input/input' + str(i) + '.xlsx'
             handler = ExcelInputHandler(relative_file_path, 0)
             resp = handler.convert_to_json()
             resp = json.loads(resp)
@@ -184,13 +184,13 @@ class TestExcelInputHandler(unittest.TestCase):
             os.remove(handler.get_json_file_path())
 
     def test_convert_to_json_with_invalid_file_indexes(self):
-        handler = ExcelInputHandler('test_input/input1.xlsx', 0)
+        handler = ExcelInputHandler('django_subject_manager/test_input/input1.xlsx', 0)
         with patch.object(ExcelInputHandler, '_ExcelInputHandler__get_start_and_end_row_indexes', side_effect=Exception("Error")) as obj_mock:
             resp = handler.convert_to_json()
             self.assertEqual(resp,"Error: can not get the Excel start cell and end cell indexes\nError")
     
     def test_convert_to_json_with_invalid_excel_input(self):
-        handler = ExcelInputHandler('test_input/input1.xlsx', 0)
+        handler = ExcelInputHandler('django_subject_manager/test_input/input1.xlsx', 0)
         with patch.object(ExcelInputHandler, '_ExcelInputHandler__get_json', side_effect=Exception("Error")) as obj_mock:
             resp = handler.convert_to_json()
             self.assertEqual(resp,"Error: invalid Excel input\nError")
@@ -199,7 +199,7 @@ class TestExcelInputHandler(unittest.TestCase):
         core_subject_nr = 40
         elective_subject_nr = 11
 
-        relative_file_path = 'test_input/input_angol.xlsx'
+        relative_file_path = 'django_subject_manager/test_input/input_angol.xlsx'
         handler = ExcelInputHandler(relative_file_path, 0)
         resp = handler.convert_to_json()
         resp = json.loads(resp)
@@ -211,7 +211,7 @@ class TestExcelInputHandler(unittest.TestCase):
         core_subject_nr = 40
         elective_subject_nr = 11
 
-        relative_file_path = 'test_input/input_angol.xlsx'
+        relative_file_path = 'django_subject_manager/test_input/input_angol.xlsx'
         handler = ExcelInputHandler(relative_file_path, 0)
         self.assertEqual(os.path.exists(handler.get_json_file_path()), False)
         resp = handler.convert_to_json()

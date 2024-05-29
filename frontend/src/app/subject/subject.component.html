@@ -47,7 +47,7 @@
                     </span>
                 </p>
             </div>
-            <div class="text-center">
+            <div *ngIf="box.spec!='Kötelező'" class="text-center">
                 <span class="dropdown-item" [ngClass]="box.spec=='Kötelező' ? 'icon-disabled' : ''"
                     data-bs-toggle="modal" data-bs-target="#deleteSubjectModal" (click)="deleteSubject()"
                     click-stop-propagation type="button" class="align-middle material-symbols-outlined">

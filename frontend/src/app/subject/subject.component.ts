@@ -1,5 +1,5 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { Subject } from '../subject';
+import { Subject } from '../model/subject';
 import { AppComponent } from '../app.component';
 
 @Component({

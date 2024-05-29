@@ -8,7 +8,7 @@ import {MatProgressBarModule} from '@angular/material/progress-bar';
 import { MatMenuModule } from '@angular/material/menu';
 import {MatButtonModule} from '@angular/material/button';
 import {DragDropModule} from '@angular/cdk/drag-drop';
-import { ClickStopPropagationDirective } from './click-stop-propagation.directive'
+import { ClickStopPropagationDirective } from './directives/click-stop-propagation.directive'
 import { FormsModule} from '@angular/forms';
 
 

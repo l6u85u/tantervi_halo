@@ -1,6 +1,5 @@
 from django.http import JsonResponse
 from . import input_handler
-import json
 
 def response(request,path,index):
     inputHandler = input_handler.ExcelInputHandler(path,index)

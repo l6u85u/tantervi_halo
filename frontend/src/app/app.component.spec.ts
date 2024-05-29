@@ -1,8 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { AppComponent } from './app.component';
-import { Semester } from './semester'
-import { Subject } from './subject'
+import { Semester } from './model/semester'
+import { Subject, Status } from './model/subject'
 import { FormsModule, NgForm } from "@angular/forms";
 import { RESP_FROM_BACKEND } from "../testing/backend-response"
 import { CORRECT_INPUT } from '../testing/correct-input';
@@ -12,8 +12,8 @@ import swal from 'sweetalert';
 import * as CryptoJS from 'crypto-js';
 import { CdkDragDrop } from '@angular/cdk/drag-drop';
 import { SweetAlert } from 'sweetalert/typings/core';
-import { LocalStorageService } from './local-storage.service';
-import { JsonDataHandler } from './json-data-handler';
+import { LocalStorageService } from './data-handling/local-storage.service';
+import { JsonDataHandler } from './data-handling/json-data-handler';
 
 describe('AppComponent', () => {
   beforeEach(async () => {
@@ -78,7 +78,7 @@ describe('AppComponent', () => {
       spyOn<any>(app.curriculums[0], 'changeSubjectStatus').and.returnValue([]);
 
       var subject = app.curriculums[0].semesters[5].subjects[0]
-      subject.status = 1
+      subject.status = Status.Enrolled
       app.clickEventHandler(subject, 5)
       await new Promise(f => setTimeout(f, 10));
       //@ts-ignore
@@ -128,21 +128,21 @@ describe('AppComponent', () => {
 
     });
 
-    it('should call curriculum.moveItemInArray function when dropping to same semester)', () => {
+    it('should call curriculum.moveSubjectToSemester function when dropping to same semester)', () => {
       var container = { element: { nativeElement: { classList: ["class1", "list-0"] } } }
       const event: CdkDragDrop<any[]> = { previousContainer: container, container: container, previousIndex: 7, currentIndex: 1 } as any;
-      spyOn<any>(app.curriculums[0], 'moveItemInArray');
+      spyOn<any>(app.curriculums[0], 'moveSubjectToSemester');
 
       app.dropEventHandler(event, 0)
 
       // @ts-ignore
-      expect(app.curriculums[0].moveItemInArray).toHaveBeenCalledWith(0, 0, 7, 1);
+      expect(app.curriculums[0].moveSubjectToSemester).toHaveBeenCalledWith(0, 0, 7, 1);
 
     });
 
     it('should emit an alert when dropping to a cross semester)', async () => {
       const event: CdkDragDrop<any[]> = { previousContainer: { element: { nativeElement: { classList: ["class1", "list-0"] } } }, container: { element: { nativeElement: { classList: ["class5", "list-5"] } } }, previousIndex: 7, currentIndex: 1 } as any;
-      spyOn<any>(app.curriculums[0], 'moveItemInArray');
+      spyOn<any>(app.curriculums[0], 'moveSubjectToSemester');
       spyOn<any>(app.curriculums[0], 'prerequisiteIsFurther').and.returnValue(false);
       spyOn<any>(app.curriculums[0], 'overlayIsSooner').and.returnValue(false);
 
@@ -167,7 +167,7 @@ describe('AppComponent', () => {
 
     it('should emit an alert when the prerequisites are in a further semester)', async () => {
       const event: CdkDragDrop<any[]> = { previousContainer: { element: { nativeElement: { classList: ["class1", "list-0"] } } }, container: { element: { nativeElement: { classList: ["class5", "list-2"] } } }, previousIndex: 7, currentIndex: 1 } as any;
-      spyOn<any>(app.curriculums[0], 'moveItemInArray');
+      spyOn<any>(app.curriculums[0], 'moveSubjectToSemester');
       spyOn<any>(app.curriculums[0], 'prerequisiteIsFurther').and.returnValue(true);
       spyOn<any>(app.curriculums[0], 'overlayIsSooner').and.returnValue(false);
 
@@ -192,7 +192,7 @@ describe('AppComponent', () => {
 
     it('should emit an alert when the overlays are in a sooner semester)', async () => {
       const event: CdkDragDrop<any[]> = { previousContainer: { element: { nativeElement: { classList: ["class1", "list-0"] } } }, container: { element: { nativeElement: { classList: ["class5", "list-2"] } } }, previousIndex: 7, currentIndex: 1 } as any;
-      spyOn<any>(app.curriculums[0], 'moveItemInArray');
+      spyOn<any>(app.curriculums[0], 'moveSubjectToSemester');
       spyOn<any>(app.curriculums[0], 'prerequisiteIsFurther').and.returnValue(false);
       spyOn<any>(app.curriculums[0], 'overlayIsSooner').and.returnValue(true);
 
@@ -814,7 +814,7 @@ describe('AppComponent', () => {
 
   });
 
-  describe(".openFile(event)", () => {
+  describe(".loadCurriculumFromFile(event)", () => {
     let app: AppComponent;
 
     beforeEach(function () {
@@ -844,7 +844,7 @@ describe('AppComponent', () => {
         numberOfSubjectsInSemesters.push(app.curriculums[0].semesters[i].subjects.length);
       }
 
-      app.openFile(event)
+      app.loadCurriculumFromFile(event)
       for (let i = 0; i < app.curriculums[0].semesters.length; i++) {
         expect(app.curriculums[0].semesters[i].subjects.length).toEqual(numberOfSubjectsInSemesters[i])
       }
@@ -857,7 +857,7 @@ describe('AppComponent', () => {
         }
       }
 
-      app.openFile(event)
+      app.loadCurriculumFromFile(event)
       await new Promise(f => setTimeout(f, 20));
       //@ts-ignore
       expect(swal.getState().isOpen).toBeTrue()
@@ -865,7 +865,7 @@ describe('AppComponent', () => {
       swal.close()
 
       app.changeLanguage()
-      app.openFile(event)
+      app.loadCurriculumFromFile(event)
       await new Promise(f => setTimeout(f, 20));
       //@ts-ignore
       expect(swal.getState().isOpen).toBeTrue()

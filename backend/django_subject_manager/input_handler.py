@@ -5,7 +5,7 @@ import logging
 import json
 from pathlib import Path
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+#build paths inside the project like this: BASE_DIR / 'subdir'
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 #set the logger
@@ -130,15 +130,15 @@ class ExcelInputHandler:
 
     def __get_start_and_end_row_indexes(self, start_cell, start_row_idx):
         try:
-            # load the Excel workbook
+            #load the Excel workbook
             wb = load_workbook(filename=self.__file_path)
-            # select the active worksheet
+            #select the active worksheet
             ws = wb.worksheets[self.__sheet_index]
         except:
-            logger.error("Error: Can not load the Excel file.\n")
+            logger.error("Error: loading the Excel file")
             raise Exception("Error: loading the Excel file")
        
-        # find the starting cell and its row index
+        #find the starting cell and its row index
         subject_row_index = -1
         for row in ws.iter_rows(min_row=start_row_idx , max_col=2, max_row=ws.max_row):
             for cell in row:
@@ -157,7 +157,7 @@ class ExcelInputHandler:
         while ws[first_subject_row_index][0].value is None:
             first_subject_row_index += 1
 
-        # find the index of the first empty row after the starting cell
+        #find the index of the first empty row after the starting cell
         empty_row_index = -1  
         
         for row in ws.iter_rows(min_row=first_subject_row_index, max_col=1, max_row=ws.max_row):
@@ -206,7 +206,7 @@ class ExcelInputHandler:
             columns_to_keep = [col for col in df.columns if ('félév' not in col or 'Ajánlott' in col) and 'Unnamed' not in col]
             df = df[columns_to_keep]
 
-            # convert DataFrame to JSON
+            #convert DataFrame to JSON
             json_data = df.to_json(orient='records', force_ascii=False)
             json_list = json.loads(json_data)
         except Exception as e:
@@ -239,7 +239,6 @@ class ExcelInputHandler:
             
         # filter out elements whose name contains '***', because these subjects are discontinued
         filt_json_list = [data for data in json_list if '***' not in data["Tanegység"]]
-        #data["Tanegység"] = str(data["Tanegység"]).rstrip('*')
 
         return json.dumps(filt_json_list, ensure_ascii=False)
 
@@ -250,7 +249,7 @@ class ExcelInputHandler:
                 raise Exception("Error: null cells in the " + column + " column")
 
     def __prerequisite_handler(self,json_data):
-        #adds a new attribute which will contain the overlay subjects to the subjects 
+        #adds a new attribute which will contain the overlay subject list of the subject
         for data in json_data:
             data["Ráépülő"] = ""
             data["Kód"] = data["Kód"].strip()
@@ -263,18 +262,19 @@ class ExcelInputHandler:
                 data["Ráépülő"] = data["Ráépülő"][:-1]
 
     #recursively creates overlays for the subject by going through the prerequisites
-    def __overlay_subject_adder(self,data, current_data, json_data):
+    def __overlay_subject_adder(self,subject_to_add, current_subject, json_data):
         pre = []
-        if ("Előfeltétel(ek)" in current_data and current_data["Előfeltétel(ek)"] is not None):
-            words = [word.strip() for word in current_data["Előfeltétel(ek)"].split(",")]
+        if ("Előfeltétel(ek)" in current_subject and current_subject["Előfeltétel(ek)"] is not None):
+            words = [word.strip() for word in current_subject["Előfeltétel(ek)"].split(",")]
 
             #string array which contains the prerequisites
             pre = [word.split(" ")[0] for word in words] 
             for p in pre:
                 for d in json_data:
                     if "Kód" in d and d["Kód"] == p:
-                        d["Ráépülő"] += data["Kód"].strip() + ","
-                        self.__overlay_subject_adder(data, d, json_data)
+                        d["Ráépülő"] += subject_to_add["Kód"].strip() + ","
+                        self.__overlay_subject_adder(subject_to_add, d, json_data)
                         break
+
 
     #endregion

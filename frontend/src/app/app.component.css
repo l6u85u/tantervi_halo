@@ -78,6 +78,11 @@ h1 {
     margin-right: 0;
 }
 
+.subject-main>div>app-semester {
+    height: 100%;
+    min-width: 12.8%;
+}
+
 .subject-main>div>div {
     height: 100%;
     min-width: 12.8%;

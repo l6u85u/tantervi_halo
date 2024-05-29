@@ -495,7 +495,7 @@
                           Code
                         </span>
                       </label>
-                      <input type="text" class="form-control" id="code" placeholder="IP-18PROGEG" name="code"
+                      <input type="text" class="form-control" id="code" placeholder="IKP-9253" name="code"
                         [(ngModel)]="electiveSubjectsForm.code">
                       <p id="code-warning"> </p>
                     </div>
@@ -694,7 +694,7 @@
                   click-stop-propagation>
                 </app-subject>
               </div>
-            </div>
+            </div> 
           </div>
           <div class="row flex-nowrap subject-credits overflow-auto" cdkDropListGroup>
             <div class="col" *ngFor="let c of curriculums[currentSpecIdx].semesters; let i = index">
@@ -890,7 +890,7 @@
       </div>
     </div>
 
-    <input type="file" accept=".txt" class="file-input" (change)="openFile($event)" #fileUpload>
+    <input type="file" accept=".txt" class="file-input" (change)="loadCurriculumFromFile($event)" #fileUpload>
 
   </main>
   <footer>

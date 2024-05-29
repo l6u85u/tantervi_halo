@@ -3,12 +3,13 @@ import { NgForm } from "@angular/forms";
 import * as FileSaver from 'file-saver';
 import swal from 'sweetalert';
 import { CdkDragDrop } from '@angular/cdk/drag-drop';
-import { Subject } from './subject';
-import { Curriculum } from './curriculum';
-import { LocalStorageService } from './local-storage.service';
-import { JsonDataHandler } from './json-data-handler';
-import { IStorage } from './i-storage';
+import { Subject, Status } from './model/subject';
+import { Curriculum } from './model/curriculum';
+import { LocalStorageService } from './data-handling/local-storage.service';
+import { JsonDataHandler } from './data-handling/json-data-handler';
+import { IStorage } from './data-handling/i-storage';
 import { environment } from '../environments/environment';
+import { FileDataAccess, FileDataAccessError } from './data-handling/file-data-access';
 
 const MAX_COLUMN_NUMBERS: number = environment.maxNumberOfSemesters;
 const SPEC_NAMES: Array<string> = environment.specNames
@@ -132,7 +133,7 @@ export class AppComponent {
 
   //#endregion
 
-  //#region Constructor
+  //#region Constructor and ngOnInit
 
   constructor() {
     //create the storage
@@ -149,11 +150,12 @@ export class AppComponent {
     this._currentSpecIdx = 0;
   }
 
-  async ngOnInit(){
+  async ngOnInit() {
     for (let i = 0; i < SPEC_LINKS.length; i++) {
       this.makeRequest('GET', BACKEND_ADDRESS + ":" + BACKEND_PORT + "/" + SPEC_LINKS[i], i)
     }
   }
+
   //#endregion
 
   //#region Public Methods
@@ -184,14 +186,14 @@ export class AppComponent {
       else { resp = "The following prerequisites are not completed:\n" }
 
       pre.forEach(e => { resp += e + "\n" })
-      swal(resp);
+      swal({ text: resp, dangerMode: true })
     }
 
     //special warning to not forget to submit the thesis registration form
-    if (subj.status == 1 && (subj.code == "IP-18FSZD" || subj.code == "IP-08SZDPIBN18")) {
+    if (subj.status == Status.Enrolled && (subj.code == "IP-18FSZD" || subj.code == "IP-08SZDPIBN18")) {
       if (this._isLanguageHu) { resp = "Ne feledd a témabejelentő kérvényt leadni!" }
       else { resp = "Do not forget to submit the thesis registration form!" }
-      swal(resp);
+      swal(resp)
     }
 
   }
@@ -205,7 +207,7 @@ export class AppComponent {
   public dropEventHandler(event: CdkDragDrop<string[]>, index: number) {
     //if the subject was dropped in the same semester as before
     if (event.previousContainer === event.container) {
-      this.curriculums[this.currentSpecIdx].moveItemInArray(index, index, event.previousIndex, event.currentIndex);
+      this.curriculums[this.currentSpecIdx].moveSubjectToSemester(index, index, event.previousIndex, event.currentIndex);
     }
     else {
       var prevColumn = parseInt(event.previousContainer.element.nativeElement.classList[1].split("-")[1])
@@ -225,10 +227,10 @@ export class AppComponent {
   public addSemester() {
     if (this.curriculums[this._currentSpecIdx].semesters.length >= MAX_COLUMN_NUMBERS) {
       if (this._isLanguageHu) {
-        swal("Elérted a maximális félévszámot, többet nem tudsz felvenni.")
+        swal({ text: "Elérted a maximális félévszámot, többet nem tudsz felvenni.", dangerMode: true })
       }
       else {
-        swal("You reached the maximum number of semesters, you can not add more.")
+        swal({ text: "You reached the maximum number of semesters, you can not add more.", dangerMode: true })
       }
     }
     else {
@@ -241,10 +243,10 @@ export class AppComponent {
     //if the semester is not empty do not delete it
     if (this.curriculums[this._currentSpecIdx].semesters[index].subjects.length != 0) {
       if (this._isLanguageHu) {
-        swal("Csak üres félévet tudsz törölni.")
+        swal({ text: "Csak üres félévet tudsz törölni.", dangerMode: true })
       }
       else {
-        swal("You can only delete empty semesters.")
+        swal({ text: "You can only delete empty semesters.", dangerMode: true })
       }
     }
     else {
@@ -304,10 +306,10 @@ export class AppComponent {
 
       if (this.curriculums[this.currentSpecIdx].prerequisiteIsFurther(subj, parseInt(resp.semester))) { //check if can be added
         if (this._isLanguageHu) {
-          swal("Nem veheted fel a tárgyat a kiválasztott félévbe, mivel az előfeltételek nem teljesülnek.")
+          swal({ text: "Nem veheted fel a tárgyat a kiválasztott félévbe, mivel az előfeltételek vagy a ráépülő tárgyak előfeltételei nem teljesülnek.", dangerMode: true })
         }
         else {
-          swal("You can not enroll to this subject because the prerequisites are not completed.")
+          swal({ text: "You can not enroll to this subject because the prerequisites or the overlay subject's prerequisites are not completed.", dangerMode: true })
         }
         return
       }
@@ -375,25 +377,21 @@ export class AppComponent {
 
   //save the current state of the curriculum to a file
   public saveCurriculumToFile() {
-    var subjects = []
-    for (let i = 0; i < this._curriculums[this._currentSpecIdx].semesters.length; i++) {
-      subjects.push(this._curriculums[this._currentSpecIdx].semesters[i].subjects)
+    try {
+      FileDataAccess.saveFile(this.curriculums[this.currentSpecIdx])
     }
+    catch(error){
+      if (this._isLanguageHu) {
+        swal({ text: "A mentés sikertelen volt", dangerMode: true })
+      }
+      else {
+        swal({ text: "The save was unsuccessful!", dangerMode: true })
+      }
 
-    var content = JSON.stringify(subjects, JsonDataHandler.changePrerequisitesAndOverlaysToString);
-    var internship = this._curriculums[this._currentSpecIdx].isInternshipCompleted.toString()
-
-    content = '{"' + this._currentSpecName + '":' + '{"subjects":' + content + ',"internship":' + internship + "}}"
-
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    var name
-    if (this._isLanguageHu) {
-      name = "tanterv_" + this._currentSpecName.split(' ').join('_').toLowerCase() + ".txt"
+      if (error instanceof Error){
+        console.log(error.message)
+      }
     }
-    else {
-      name = "curriculum_" + this._currentSpecName.split(' ').join('_').toLowerCase() + ".txt"
-    }
-    FileSaver.saveAs(blob, name);
   }
 
   //save the current state of the curriculum to the Local Storage
@@ -417,18 +415,24 @@ export class AppComponent {
   }
 
   //open file which contains the state of a curriculum
-  public openFile(event: any) {
-    var file = event.target.files[0]
-    var reader = new FileReader();
-    var content
-
-    reader.onload = () => {
-      content = reader.result;
-      if (typeof (content) === "string") {
-        try {
-          this.loadCurriculumFromFile(content)
+  public async loadCurriculumFromFile(event: any) {
+    try {
+      var curriculum = await FileDataAccess.openFile(event, this.currentSpecIdx)
+      if (curriculum != null) {
+        this.curriculums[this.currentSpecIdx] = curriculum
+      }
+      else {
+        if (this._isLanguageHu) {
+          swal({ text: "A betöltés sikertelen volt", dangerMode: true })
         }
-        catch (error) {
+        else {
+          swal({ text: "The loading was unsuccessful!", dangerMode: true })
+        }
+      }
+    }
+    catch (error) {
+      if (error instanceof FileDataAccessError) {
+        if (error.errorCode == 1) {
           if (this._isLanguageHu) {
             swal({ text: "Hibás a fájl formátuma!", dangerMode: true })
           }
@@ -436,10 +440,19 @@ export class AppComponent {
             swal({ text: "The format of the file is incorrect!", dangerMode: true })
           }
         }
+        if (error.errorCode == 2) {
+          if (this._isLanguageHu) {
+            swal({ text: "Nem megfelelő tanterv!", dangerMode: true })
+          }
+          else {
+            swal({ text: "Incorrect curriculum!", dangerMode: true })
+          }
+        }
+        console.error(error.message);
+      } else {
+        console.error("An unexpected error occurred.");
       }
     }
-    reader.readAsText(file);
-    event.target.value = "";
   }
 
   public loadCurriculumFromStorage() {
@@ -450,7 +463,12 @@ export class AppComponent {
       JsonDataHandler.getAllData(resp.subjects, resp.internship, this._curriculums[this.currentSpecIdx])
     }
     else {
-      swal(("A local storage-ban nincs elmentve " + this.currentSpecName + " tanterv!"))
+      if (this.isLanguageHu){
+        swal({ text: "A local storage-ban nincs elmentve " + this.currentSpecName + " tanterv!", dangerMode: true })
+      }
+      else {
+        swal({ text: "There are no " + this.currentSpecName + " curriculum saved in the local storage!", dangerMode: true })
+      }
     }
   }
 
@@ -465,10 +483,10 @@ export class AppComponent {
     //check whether the subject can be moved to the semester
     if (this.curriculums[this.currentSpecIdx].prerequisiteIsFurther(itemToMove, columnIdx) || this.curriculums[this.currentSpecIdx].overlayIsSooner(itemToMove, columnIdx)) {
       if (this._isLanguageHu) {
-        swal("Nem veheted fel a tárgyat a kiválasztott félévbe, mivel az előfeltételei vagy a ráépülő tárgyak előfeltételei nem teljesülnek.")
+        swal({ text: "Nem veheted fel a tárgyat a kiválasztott félévbe, mivel az előfeltételei vagy a ráépülő tárgyak előfeltételei nem teljesülnek.", dangerMode: true })
       }
       else {
-        swal("You can not enroll to this subject because the prerequisites are not completed.")
+        swal({ text: "You can not enroll to this subject because the prerequisites or the overlay subject's prerequisites are not completed.", dangerMode: true })
       }
       return
     }
@@ -482,13 +500,13 @@ export class AppComponent {
       }
     }
 
-    this.curriculums[this.currentSpecIdx].moveItemInArray(prevColumnIdx, columnIdx, prevIdx, currentIdx)
+    this.curriculums[this.currentSpecIdx].moveSubjectToSemester(prevColumnIdx, columnIdx, prevIdx, currentIdx)
   }
 
   //show error message to the user if the data for the elective subject is not good
   private showElectiveFormMessage() {
     if (this._electiveSubjectsForm.name != "" && this._electiveSubjectsForm.code != "" && this._electiveSubjectsForm.credit > 0 && this._electiveSubjectsForm.semester != -1) {
-      swal(this._electiveSubjectsFormMessage)
+      swal({ text: this._electiveSubjectsFormMessage, dangerMode: true })
     }
   }
 
@@ -532,6 +550,7 @@ export class AppComponent {
     return (name && code && credit)
   }
 
+  //communicate with the backend using XMLHttpRequest
   private async makeRequest(method: string, url: string, curriculumIdx: number): Promise<any> {
     return new Promise(() => {
       const xhr = new XMLHttpRequest();
@@ -539,37 +558,6 @@ export class AppComponent {
       xhr.onreadystatechange = () => JsonDataHandler.getData(xhr, this.curriculums[curriculumIdx]);
       xhr.send();
     });
-  }
-
-  //load the content of the file and build a curriculum from it
-  private loadCurriculumFromFile(content: string) {
-    try {
-      const jsonObject = JSON.parse(content);
-
-      //if the curriculum in the file belongs to the current spec 
-      if (!jsonObject.hasOwnProperty(this._currentSpecName)) {
-        if (this._isLanguageHu) {
-          swal({ text: "Nem megfelelő tanterv!", dangerMode: true })
-        }
-        else {
-          swal({ text: "Incorrect curriculum!", dangerMode: true })
-        }
-        return
-      }
-
-      const curriculum = jsonObject[this._currentSpecName]
-      this._curriculums[this.currentSpecIdx] = new Curriculum(SPEC_NAMES[this.currentSpecIdx], SPEC_COMP_INFO_CREDITS[this.currentSpecIdx], SPEC_COMP_SCIENCE_CREDITS[this.currentSpecIdx])
-      JsonDataHandler.getAllData(curriculum.subjects, curriculum.internship, this._curriculums[this.currentSpecIdx])
-      //this.curriculums[this.currentSpecIdx].getSubjects(curriculum.subjects, curriculum.internship)
-    }
-    catch (error) {
-      if (this._isLanguageHu) {
-        swal({ text: "Hibás a fájl formátuma!", dangerMode: true })
-      }
-      else {
-        swal({ text: "The format of the file is incorrect!", dangerMode: true })
-      }
-    }
   }
 
   //#endregion 
