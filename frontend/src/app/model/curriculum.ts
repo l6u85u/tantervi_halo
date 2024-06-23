@@ -57,6 +57,10 @@ export class Curriculum {
         return this._compElectiveSubjects
     }
 
+    public set compElectiveSubjects(compElectiveSubjects: Array<Subject>) {
+        this._compElectiveSubjects = compElectiveSubjects
+    }
+
     public get specName(): string {
         return this._specName
     }
@@ -338,6 +342,31 @@ export class Curriculum {
         for (let i = 0; i < subject.pre.length; i++) {
             if (subject.pre[i].subject.spec == "Kötelező" && !subject.pre[i].subject.over.includes(subject)) {
                 this.updatePrerequisite(subject, subject.pre[i].subject)
+            }
+        }
+    }
+
+    //connect all the compulsory elective subjects' prerequisites with the compulsory subjects list
+    public connectCompulsoryAndElectiveSubjects() {
+        //iterate through every comp. elective subject
+        for (var i = 0; i < this.compElectiveSubjects.length; i++) {
+            for (var p = 0; p < this.compElectiveSubjects[i].pre.length; p++) {
+                var subj = this.compElectiveSubjects[i].pre[p].subject
+
+                //check if the prerequisite is a comp. elective subject
+                var found = this.compElectiveSubjects.includes(subj)
+
+                //if not found then connect the prerequisites with the compulsory subjects
+                if (!found) {
+                    for (let j = 0; j < this.semesters.length && !found; j++)
+                        for (let l = 0; l < this.semesters[j].subjects.length; l++) {
+                            if (this.semesters[j].subjects[l].code == subj.code) {
+                                this.compElectiveSubjects[i].pre[p].subject = this.semesters[j].subjects[l]
+                                found = true
+                                break
+                            }
+                        }
+                }
             }
         }
     }

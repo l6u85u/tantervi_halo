@@ -88,6 +88,11 @@ h1 {
     min-width: 12.8%;
 }
 
+.subject-main>div:first-of-type>div {
+    padding-right: 0;
+    padding-left: 0;
+}
+
 .subject-credits {
     background-color: #002851;
     color: white;

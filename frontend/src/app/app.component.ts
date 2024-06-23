@@ -449,6 +449,8 @@ export class AppComponent {
     try {
       var curriculum = await FileDataAccess.openFile(event, this.currentSpecIdx)
       if (curriculum != null) {
+        curriculum.compElectiveSubjects = this.curriculums[this.currentSpecIdx].compElectiveSubjects
+        curriculum.connectCompulsoryAndElectiveSubjects()
         this.curriculums[this.currentSpecIdx] = curriculum
       }
       else {
@@ -490,8 +492,11 @@ export class AppComponent {
       var content = this._storage.get(this._currentSpecName)
       if (content) {
         var resp = JSON.parse(content)
+        var compElectiveSubjects = this._curriculums[this.currentSpecIdx].compElectiveSubjects
         this._curriculums[this.currentSpecIdx] = new Curriculum(SPEC_NAMES[this.currentSpecIdx], SPEC_COMP_INFO_CREDITS[this.currentSpecIdx], SPEC_COMP_SCIENCE_CREDITS[this.currentSpecIdx])
+        this._curriculums[this.currentSpecIdx].compElectiveSubjects = compElectiveSubjects
         JsonDataHandler.getAllData(resp.subjects, resp.internship, this._curriculums[this.currentSpecIdx])
+        this._curriculums[this.currentSpecIdx].connectCompulsoryAndElectiveSubjects()
       }
       else {
         if (this.isLanguageHu) {
